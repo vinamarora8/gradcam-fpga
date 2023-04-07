@@ -1,0 +1,15 @@
+venv
+
+# Raw data dirs
+weights/
+data/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Macos
+.DS_Store
+
+# Compiled Object files
+*.o
+*.obj
