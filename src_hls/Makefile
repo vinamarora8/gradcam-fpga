@@ -8,16 +8,15 @@ IFLAG += -I "/usr/include/x86_64-linux-gnu"
 CFLAG += -fPIC -O3 -std=c++11 -mcmodel=large  -Wconversion
 CC      = g++ 
 
+CFLAG += -DCSIM_DEBUG # TODO Might have to remove this when building for syn
+
 ALLOUT+= csim.out
 
 all: IFLAG +=  -g -DCSIM_DEBUG
 all: $(ALLOUT) 
 
-csim.out:
-	# TODO
-
-synth:
-	# TODO
+conv.o : conv.cpp util.h
+	$(CC) $(CFLAG) -c $< -o $@
 
 clean:
 	clean:
