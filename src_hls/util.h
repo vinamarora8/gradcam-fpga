@@ -3,7 +3,7 @@
 #include <iostream>
 #include <ap_fixed.h>
 
-#ifdef  CSIM_DEBUG
+#ifdef CSIM_DEBUG
     typedef float fm_t;
     typedef float wt_t;
 #else
