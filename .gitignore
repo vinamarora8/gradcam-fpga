@@ -6,6 +6,7 @@ data/
 
 # Jupyter
 .ipynb_checkpoints/
+notebooks/
 
 # Macos
 .DS_Store
@@ -13,3 +14,4 @@ data/
 # Compiled Object files
 *.o
 *.obj
+
