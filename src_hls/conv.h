@@ -2,6 +2,10 @@
 
 #include "util.h"
 
+#define CONV_DIM(IDIM, KDIM, PD, ST) ((IDIM - KDIM + 2*PD)/ST + 1)
+// Compute the output dimension given the input dimension, kernel dimension,
+// stride and padding
+
 template <int ID, int IH, int IW, 
           int KD, int KH, int KW, 
           int ST, int PD,
