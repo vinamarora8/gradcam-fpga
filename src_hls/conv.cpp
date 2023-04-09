@@ -15,16 +15,20 @@
  *   KW: Kernel width
  *   ST: Stride
  *   PD: Padding
+ *   BIAS: Whether to use bias
  * Templated with the following assumptions:
  * - Padding and Stride are same on all sides
  *
  */
-template <int ID, int IH, int IW, int KD, int KH, int KW, int ST, int PD>
+template <int ID, int IH, int IW, 
+          int KD, int KH, int KW, 
+          int ST, int PD,
+          bool BIAS>
 void conv (
-        fm_t Y_buf[KD][CONV_DIM(IH, KH, ST, PD)][CONV_DIM(IW, KW, ST, PD)],
-        fm_t X_buf[ID][IH][IW],
-        wt_t W_buf[KD][ID][KH][KW],
-        wt_t B_buf[KD]
+        fm_t y[KD][CONV_DIM(IH, KH, ST, PD)][CONV_DIM(IW, KW, ST, PD)],
+        fm_t x[ID][IH][IW],
+        wt_t weights[KD][ID][KH][KW],
+        wt_t biases[KD]
         )
 {
 
@@ -40,7 +44,12 @@ void conv (
                         for (int kw = 0; kw < KW; kw++)
                         {
                             if (id == 0 && kh == 0 && kw == 0)
-                                Y_buf[of][oh][ow] = B_buf[of];
+                            {
+                                if (BIAS)
+                                    y[of][oh][ow] = biases[of];
+                                else
+                                    y[of][oh][ow] = (fm_t) 0;
+                            }
 
                             int i = (ST * oh) - PD + kh;
                             int j = (ST * ow) - PD + kw;
@@ -48,7 +57,6 @@ void conv (
                             if (i < 0 || j < 0 || j >= IH || j >= IW)
                                 continue;
 
-                            Y_buf[of][oh][ow] += X_buf[id][i][j] * W_buf[of][id][kh][kw];
+                            y[of][oh][ow] += x[id][i][j] * weights[of][id][kh][kw];
                         }
-
 }
