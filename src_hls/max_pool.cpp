@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <util.h>
+#include <conv.h>
 
 /*Parameters
 *    NUM_CHANNELS: i/p Depth
@@ -14,7 +15,7 @@
 */
 
 
-#define IH 224
+/* #define IH 224
 #define IW 224
 #define KD 64
 #define KH 3
@@ -23,6 +24,10 @@
 #define PD 1
 #define OH IM_HEIGHT/2
 #define OW IM_WIDTH/2
+*/
+template <int ID, int IH, int IW,
+          int KD, int KH, int KW,
+          int ST, int PD>
 
 
 
