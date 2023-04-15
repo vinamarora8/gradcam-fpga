@@ -33,9 +33,11 @@ template <int ID, int IH, int IW,
 
 
 void maxpool2d(fm_t input[KD][IH][IW],
-    fm_t output[KD][OH][OW],
-    int max_id[KD][OH][OW]) 
+    fm_t output[KD][CONV_DIM(IH, KH, ST, PD)][CONV_DIM(IW, KW, ST, PD)],
+    int max_id[KD][CONV_DIM(IH, KH, ST, PD)][CONV_DIM(IW, KW, ST, PD)]) 
 {
+    const int OH = CONV_DIM(IH, KH, ST, PD)
+    const int OW = CONV_DIM(IW, KW, ST, PD)
     for (int c = 0; c < KD; c++) {
         for (int h = 0; h < OH; h++) {
             for (int w = 0; w < OW; w++) {
