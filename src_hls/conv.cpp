@@ -13,6 +13,7 @@
  *   ST: Stride
  *   PD: Padding
  *   BIAS: Whether to use bias
+ *   RELU: Whether to use ReLU
  * Templated with the following assumptions:
  * - Padding and Stride are same on all sides
  *
@@ -20,12 +21,13 @@
 template <int ID, int IH, int IW, 
           int KD, int KH, int KW, 
           int ST, int PD,
-          bool BIAS>
+          bool BIAS, bool RES>
 void conv (
         fm_t y[KD][CONV_DIM(IH, KH, ST, PD)][CONV_DIM(IW, KW, ST, PD)],
         fm_t x[ID][IH][IW],
         wt_t weights[KD][ID][KH][KW],
-        wt_t biases[KD]
+        wt_t biases[KD],
+        fm_t res[KD][CONV_DIM(IH, KH, ST, PD)][CONV_DIM(IW, KW, ST, PD)]
         )
 {
 
@@ -46,6 +48,9 @@ void conv (
                                     y[of][oh][ow] = biases[of];
                                 else
                                     y[of][oh][ow] = (fm_t) 0;
+
+                                if (RES)
+                                    y[of][oh][ow] += res[of][oh][ow];
                             }
 
                             int i = (ST * oh) - PD + kh;
