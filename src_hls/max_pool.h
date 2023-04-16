@@ -9,8 +9,8 @@ template <int ID, int IH, int IW,
           int ST, int PD>
 void maxpool2d(
     fm_t input[ID][IH][IW],
-    fm_t output[OD][OH][OW],
-    int max_id[OD][OH][OW]
+    fm_t output[OD][OH][OW]
+    //int max_id[OD][OH][OW]
 )
 {
     assert(OH == CONV_DIM(IH, KH, PD, ST));
@@ -37,7 +37,7 @@ void maxpool2d(
                     }
                 }
                 output[c][h][w] = max_val;
-                max_id[c][h][w] = max_idx;
+                //max_id[c][h][w] = max_idx;
             }
         }
     }
