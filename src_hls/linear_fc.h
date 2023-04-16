@@ -20,7 +20,7 @@ void linear_fc(
     for (int j = 0; j < NO; j++){
         fm_t sum = 0;
         if (BIAS)
-            fm_t sum = bias[j];
+            fm_t sum = biases[j];
 
         for (int i = 0; i < NI; i++){
             sum += in[i] * weights[i][j];

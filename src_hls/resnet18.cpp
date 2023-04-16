@@ -3,6 +3,8 @@
 #include "util.h"
 #include "conv.h"
 #include "max_pool.h"
+#include "avg_pool.h"
+#include "linear_fc.h"
 
 void resnet18(
         fm_t input[3][224][224],
@@ -107,4 +109,14 @@ void resnet18(
     conv<512, 7, 7,
         512, 7, 7,
         3, 3, 1, 1, true, true>(l4_c2_out, l4_c1_out, l4_c2_weight, l4_c2_bias, l4_ds_out);
+
+
+    // avgpool
+    fm_t avgpool_out[512];
+    avg_pool<512, 7, 7>(l4_c2_out, avgpool_out);
+
+    
+    // fc
+    fm_t fc_out[1000];
+    linear_fc<512, 1000, true>(avgpool_out, fc_out, fc_weight, fc_bias);
 }
