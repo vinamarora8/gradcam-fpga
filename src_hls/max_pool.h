@@ -1,21 +1,22 @@
 #pragma once
 
-#include "util.h"
-
-#define CONV_DIM(IDIM, KDIM, PD, ST) ((IDIM - KDIM + 2*PD)/ST + 1)
+#include "conv.h"
+#include <cassert>
 
 template <int ID, int IH, int IW,
-    int KD, int KH, int KW,
-    int ST, int PD>
+          int OD, int OH, int OW,
+          int KH, int KW,
+          int ST, int PD>
 void maxpool2d(
-    fm_t input[KD][IH][IW],
-    fm_t output[KD][CONV_DIM(IH, KH, ST, PD)][CONV_DIM(IW, KW, ST, PD)],
-    int max_id[KD][CONV_DIM(IH, KH, ST, PD)][CONV_DIM(IW, KW, ST, PD)]
+    fm_t input[ID][IH][IW],
+    fm_t output[OD][OH][OW],
+    int max_id[OD][OH][OW]
 )
 {
-    const int OH = CONV_DIM(IH, KH, ST, PD)
-    const int OW = CONV_DIM(IW, KW, ST, PD)
-    for (int c = 0; c < KD; c++) {
+    assert(OH == CONV_DIM(IH, KH, PD, ST));
+    assert(OW == CONV_DIM(IW, KW, PD, ST));
+
+    for (int c = 0; c < OD; c++) {
         for (int h = 0; h < OH; h++) {
             for (int w = 0; w < OW; w++) {
                 fm_t max_val = -1e-09;
