@@ -8,8 +8,8 @@ template <int ID, int IH, int IW,
           int KH, int KW,
           int ST, int PD>
 void maxpool2d(
-    fm_t input[ID][IH][IW],
-    fm_t output[OD][OH][OW]
+    fm_t output[OD][OH][OW],
+    fm_t input[ID][IH][IW]
     //int max_id[OD][OH][OW]
 )
 {
