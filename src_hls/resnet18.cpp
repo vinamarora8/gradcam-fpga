@@ -8,7 +8,7 @@
 
 void resnet18(
         fm_t input[3][224][224],
-        fm_t output[1000][1][1],
+        fm_t output[1000],
         wt_t conv1_weight[64][3][7][7],
         wt_t conv1_bias[64],
         // layer 1
@@ -117,6 +117,5 @@ void resnet18(
 
     
     // fc
-    fm_t fc_out[1000];
-    linear_fc<512, 1000, true>(avgpool_out, fc_out, fc_weight, fc_bias);
+    linear_fc<512, 1000, true>(avgpool_out, output, fc_weight, fc_bias);
 }
