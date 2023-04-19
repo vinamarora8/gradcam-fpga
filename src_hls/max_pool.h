@@ -19,7 +19,7 @@ void maxpool2d(
     for (int c = 0; c < OD; c++) {
         for (int h = 0; h < OH; h++) {
             for (int w = 0; w < OW; w++) {
-                fm_t max_val = -1e-09;
+                fm_t max_val = 0;
                 int max_idx = 0;
                 for (int i = 0; i < KH; i++) {
                     for (int j = 0; j < KW; j++) {
