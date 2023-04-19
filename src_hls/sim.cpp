@@ -4,9 +4,7 @@
 #include <string>
 #include <vector>
 
-#ifdef CSIM_DEBUG
-    #define CSIM_DEBUG
-#endif
+#define CSIM_DEBUG
 
 #include "util.h"
 #include "conv.h"
@@ -115,52 +113,52 @@ wt_t fixp_fc_weight[1000][512];
 wt_t fixp_fc_bias[1000];
 
 void load_from_files(){
-    std::string root_dir = "bin/";
+    std::string root_dir = "../expected_activations/n01739381_vine_snake/";
 
     load_fp_and_fixp_vals<fm_t, 3,224,224>(input, fixp_input, root_dir + VAR_NAME(input));
-    load_fp_and_fixp_vals<fm_t, 1000>(output, fixp_output, root_dir + VAR_NAME(output));
-    load_fp_and_fixp_vals<wt_t, 64,3,7,7>(conv1_weight, fixp_conv1_weight, root_dir + VAR_NAME(conv1_weight));
-    load_fp_and_fixp_vals<wt_t, 64>(conv1_bias, fixp_conv1_bias, root_dir + VAR_NAME(conv1_bias));
-    load_fp_and_fixp_vals<wt_t, 64,64,3,3>(l10_c1_weight, fixp_l10_c1_weight, root_dir + VAR_NAME(l10_c1_weight));
-    load_fp_and_fixp_vals<wt_t, 64>(l10_c1_bias, fixp_l10_c1_bias, root_dir + VAR_NAME(l10_c1_bias));
-    load_fp_and_fixp_vals<wt_t, 64,64,3,3>(l10_c2_weight, fixp_l10_c2_weight, root_dir + VAR_NAME(l10_c2_weight));
-    load_fp_and_fixp_vals<wt_t, 64>(l10_c2_bias, fixp_l10_c2_bias, root_dir + VAR_NAME(l10_c2_bias));
-    load_fp_and_fixp_vals<wt_t, 64,64,3,3>(l11_c1_weight, fixp_l11_c1_weight, root_dir + VAR_NAME(l11_c1_weight));
-    load_fp_and_fixp_vals<wt_t, 64>(l11_c1_bias, fixp_l11_c1_bias, root_dir + VAR_NAME(l11_c1_bias));
-    load_fp_and_fixp_vals<wt_t, 64,64,3,3>(l11_c2_weight, fixp_l11_c2_weight, root_dir + VAR_NAME(l11_c2_weight));
-    load_fp_and_fixp_vals<wt_t, 64>(l11_c2_bias, fixp_l11_c2_bias, root_dir + VAR_NAME(l11_c2_bias));
-    load_fp_and_fixp_vals<wt_t, 128,64,1,1>(l2_ds_weight, fixp_l2_ds_weight, root_dir + VAR_NAME(l2_ds_weight));
-    load_fp_and_fixp_vals<wt_t, 128>(l2_ds_bias, fixp_l2_ds_bias, root_dir + VAR_NAME(l2_ds_bias));
-    load_fp_and_fixp_vals<wt_t, 128,64,3,3>(l20_c1_weight, fixp_l20_c1_weight, root_dir + VAR_NAME(l20_c1_weight));
-    load_fp_and_fixp_vals<wt_t, 128>(l20_c1_bias, fixp_l20_c1_bias, root_dir + VAR_NAME(l20_c1_bias));
-    load_fp_and_fixp_vals<wt_t, 128,128,3,3>(l20_c2_weight, fixp_l20_c2_weight, root_dir + VAR_NAME(l20_c2_weight));
-    load_fp_and_fixp_vals<wt_t, 128>(l20_c2_bias, fixp_l20_c2_bias, root_dir + VAR_NAME(l20_c2_bias));
-    load_fp_and_fixp_vals<wt_t, 128,128,3,3>(l21_c1_weight, fixp_l21_c1_weight, root_dir + VAR_NAME(l21_c1_weight));
-    load_fp_and_fixp_vals<wt_t, 128>(l21_c1_bias, fixp_l21_c1_bias, root_dir + VAR_NAME(l21_c1_bias));
-    load_fp_and_fixp_vals<wt_t, 128,128,3,3>(l21_c2_weight, fixp_l21_c2_weight, root_dir + VAR_NAME(l21_c2_weight));
-    load_fp_and_fixp_vals<wt_t, 128>(l21_c2_bias, fixp_l21_c2_bias, root_dir + VAR_NAME(l21_c2_bias));
-    load_fp_and_fixp_vals<wt_t, 256,128,1,1>(l3_ds_weight, fixp_l3_ds_weight, root_dir + VAR_NAME(l3_ds_weight));
-    load_fp_and_fixp_vals<wt_t, 256>(l3_ds_bias, fixp_l3_ds_bias, root_dir + VAR_NAME(l3_ds_bias));
-    load_fp_and_fixp_vals<wt_t, 256,128,3,3>(l30_c1_weight, fixp_l30_c1_weight, root_dir + VAR_NAME(l30_c1_weight));
-    load_fp_and_fixp_vals<wt_t, 256>(l30_c1_bias, fixp_l30_c1_bias, root_dir + VAR_NAME(l30_c1_bias));
-    load_fp_and_fixp_vals<wt_t, 256,256,3,3>(l30_c2_weight, fixp_l30_c2_weight, root_dir + VAR_NAME(l30_c2_weight));
-    load_fp_and_fixp_vals<wt_t, 256>(l30_c2_bias, fixp_l30_c2_bias, root_dir + VAR_NAME(l30_c2_bias));
-    load_fp_and_fixp_vals<wt_t, 256,256,3,3>(l31_c1_weight, fixp_l31_c1_weight, root_dir + VAR_NAME(l31_c1_weight));
-    load_fp_and_fixp_vals<wt_t, 256>(l31_c1_bias, fixp_l31_c1_bias, root_dir + VAR_NAME(l31_c1_bias));
-    load_fp_and_fixp_vals<wt_t, 256,256,3,3>(l31_c2_weight, fixp_l31_c2_weight, root_dir + VAR_NAME(l31_c2_weight));
-    load_fp_and_fixp_vals<wt_t, 256>(l31_c2_bias, fixp_l31_c2_bias, root_dir + VAR_NAME(l31_c2_bias));
-    load_fp_and_fixp_vals<wt_t, 512,256,1,1>(l4_ds_weight, fixp_l4_ds_weight, root_dir + VAR_NAME(l4_ds_weight));
-    load_fp_and_fixp_vals<wt_t, 512>(l4_ds_bias, fixp_l4_ds_bias, root_dir + VAR_NAME(l4_ds_bias));
-    load_fp_and_fixp_vals<wt_t, 512,256,3,3>(l40_c1_weight, fixp_l40_c1_weight, root_dir + VAR_NAME(l40_c1_weight));
-    load_fp_and_fixp_vals<wt_t, 512>(l40_c1_bias, fixp_l40_c1_bias, root_dir + VAR_NAME(l40_c1_bias));
-    load_fp_and_fixp_vals<wt_t, 512,512,3,3>(l40_c2_weight, fixp_l40_c2_weight, root_dir + VAR_NAME(l40_c2_weight));
-    load_fp_and_fixp_vals<wt_t, 512>(l40_c2_bias, fixp_l40_c2_bias, root_dir + VAR_NAME(l40_c2_bias));
-    load_fp_and_fixp_vals<wt_t, 512,512,3,3>(l41_c1_weight, fixp_l41_c1_weight, root_dir + VAR_NAME(l41_c1_weight));
-    load_fp_and_fixp_vals<wt_t, 512>(l41_c1_bias, fixp_l41_c1_bias, root_dir + VAR_NAME(l41_c1_bias));
-    load_fp_and_fixp_vals<wt_t, 512,512,3,3>(l41_c2_weight, fixp_l41_c2_weight, root_dir + VAR_NAME(l41_c2_weight));
-    load_fp_and_fixp_vals<wt_t, 512>(l41_c2_bias, fixp_l41_c2_bias, root_dir + VAR_NAME(l41_c2_bias));
-    load_fp_and_fixp_vals<wt_t, 1000,512>(fc_weight, fixp_fc_weight, root_dir + VAR_NAME(fc_weight));
-    load_fp_and_fixp_vals<wt_t, 1000>(fc_bias, fixp_fc_bias, root_dir + VAR_NAME(fc_bias));
+    // load_fp_and_fixp_vals<fm_t, 1000>(output, fixp_output, root_dir + VAR_NAME(output));
+    // load_fp_and_fixp_vals<wt_t, 64,3,7,7>(conv1_weight, fixp_conv1_weight, root_dir + VAR_NAME(conv1_weight));
+    // load_fp_and_fixp_vals<wt_t, 64>(conv1_bias, fixp_conv1_bias, root_dir + VAR_NAME(conv1_bias));
+    // load_fp_and_fixp_vals<wt_t, 64,64,3,3>(l10_c1_weight, fixp_l10_c1_weight, root_dir + VAR_NAME(l10_c1_weight));
+    // load_fp_and_fixp_vals<wt_t, 64>(l10_c1_bias, fixp_l10_c1_bias, root_dir + VAR_NAME(l10_c1_bias));
+    // load_fp_and_fixp_vals<wt_t, 64,64,3,3>(l10_c2_weight, fixp_l10_c2_weight, root_dir + VAR_NAME(l10_c2_weight));
+    // load_fp_and_fixp_vals<wt_t, 64>(l10_c2_bias, fixp_l10_c2_bias, root_dir + VAR_NAME(l10_c2_bias));
+    // load_fp_and_fixp_vals<wt_t, 64,64,3,3>(l11_c1_weight, fixp_l11_c1_weight, root_dir + VAR_NAME(l11_c1_weight));
+    // load_fp_and_fixp_vals<wt_t, 64>(l11_c1_bias, fixp_l11_c1_bias, root_dir + VAR_NAME(l11_c1_bias));
+    // load_fp_and_fixp_vals<wt_t, 64,64,3,3>(l11_c2_weight, fixp_l11_c2_weight, root_dir + VAR_NAME(l11_c2_weight));
+    // load_fp_and_fixp_vals<wt_t, 64>(l11_c2_bias, fixp_l11_c2_bias, root_dir + VAR_NAME(l11_c2_bias));
+    // load_fp_and_fixp_vals<wt_t, 128,64,1,1>(l2_ds_weight, fixp_l2_ds_weight, root_dir + VAR_NAME(l2_ds_weight));
+    // load_fp_and_fixp_vals<wt_t, 128>(l2_ds_bias, fixp_l2_ds_bias, root_dir + VAR_NAME(l2_ds_bias));
+    // load_fp_and_fixp_vals<wt_t, 128,64,3,3>(l20_c1_weight, fixp_l20_c1_weight, root_dir + VAR_NAME(l20_c1_weight));
+    // load_fp_and_fixp_vals<wt_t, 128>(l20_c1_bias, fixp_l20_c1_bias, root_dir + VAR_NAME(l20_c1_bias));
+    // load_fp_and_fixp_vals<wt_t, 128,128,3,3>(l20_c2_weight, fixp_l20_c2_weight, root_dir + VAR_NAME(l20_c2_weight));
+    // load_fp_and_fixp_vals<wt_t, 128>(l20_c2_bias, fixp_l20_c2_bias, root_dir + VAR_NAME(l20_c2_bias));
+    // load_fp_and_fixp_vals<wt_t, 128,128,3,3>(l21_c1_weight, fixp_l21_c1_weight, root_dir + VAR_NAME(l21_c1_weight));
+    // load_fp_and_fixp_vals<wt_t, 128>(l21_c1_bias, fixp_l21_c1_bias, root_dir + VAR_NAME(l21_c1_bias));
+    // load_fp_and_fixp_vals<wt_t, 128,128,3,3>(l21_c2_weight, fixp_l21_c2_weight, root_dir + VAR_NAME(l21_c2_weight));
+    // load_fp_and_fixp_vals<wt_t, 128>(l21_c2_bias, fixp_l21_c2_bias, root_dir + VAR_NAME(l21_c2_bias));
+    // load_fp_and_fixp_vals<wt_t, 256,128,1,1>(l3_ds_weight, fixp_l3_ds_weight, root_dir + VAR_NAME(l3_ds_weight));
+    // load_fp_and_fixp_vals<wt_t, 256>(l3_ds_bias, fixp_l3_ds_bias, root_dir + VAR_NAME(l3_ds_bias));
+    // load_fp_and_fixp_vals<wt_t, 256,128,3,3>(l30_c1_weight, fixp_l30_c1_weight, root_dir + VAR_NAME(l30_c1_weight));
+    // load_fp_and_fixp_vals<wt_t, 256>(l30_c1_bias, fixp_l30_c1_bias, root_dir + VAR_NAME(l30_c1_bias));
+    // load_fp_and_fixp_vals<wt_t, 256,256,3,3>(l30_c2_weight, fixp_l30_c2_weight, root_dir + VAR_NAME(l30_c2_weight));
+    // load_fp_and_fixp_vals<wt_t, 256>(l30_c2_bias, fixp_l30_c2_bias, root_dir + VAR_NAME(l30_c2_bias));
+    // load_fp_and_fixp_vals<wt_t, 256,256,3,3>(l31_c1_weight, fixp_l31_c1_weight, root_dir + VAR_NAME(l31_c1_weight));
+    // load_fp_and_fixp_vals<wt_t, 256>(l31_c1_bias, fixp_l31_c1_bias, root_dir + VAR_NAME(l31_c1_bias));
+    // load_fp_and_fixp_vals<wt_t, 256,256,3,3>(l31_c2_weight, fixp_l31_c2_weight, root_dir + VAR_NAME(l31_c2_weight));
+    // load_fp_and_fixp_vals<wt_t, 256>(l31_c2_bias, fixp_l31_c2_bias, root_dir + VAR_NAME(l31_c2_bias));
+    // load_fp_and_fixp_vals<wt_t, 512,256,1,1>(l4_ds_weight, fixp_l4_ds_weight, root_dir + VAR_NAME(l4_ds_weight));
+    // load_fp_and_fixp_vals<wt_t, 512>(l4_ds_bias, fixp_l4_ds_bias, root_dir + VAR_NAME(l4_ds_bias));
+    // load_fp_and_fixp_vals<wt_t, 512,256,3,3>(l40_c1_weight, fixp_l40_c1_weight, root_dir + VAR_NAME(l40_c1_weight));
+    // load_fp_and_fixp_vals<wt_t, 512>(l40_c1_bias, fixp_l40_c1_bias, root_dir + VAR_NAME(l40_c1_bias));
+    // load_fp_and_fixp_vals<wt_t, 512,512,3,3>(l40_c2_weight, fixp_l40_c2_weight, root_dir + VAR_NAME(l40_c2_weight));
+    // load_fp_and_fixp_vals<wt_t, 512>(l40_c2_bias, fixp_l40_c2_bias, root_dir + VAR_NAME(l40_c2_bias));
+    // load_fp_and_fixp_vals<wt_t, 512,512,3,3>(l41_c1_weight, fixp_l41_c1_weight, root_dir + VAR_NAME(l41_c1_weight));
+    // load_fp_and_fixp_vals<wt_t, 512>(l41_c1_bias, fixp_l41_c1_bias, root_dir + VAR_NAME(l41_c1_bias));
+    // load_fp_and_fixp_vals<wt_t, 512,512,3,3>(l41_c2_weight, fixp_l41_c2_weight, root_dir + VAR_NAME(l41_c2_weight));
+    // load_fp_and_fixp_vals<wt_t, 512>(l41_c2_bias, fixp_l41_c2_bias, root_dir + VAR_NAME(l41_c2_bias));
+    // load_fp_and_fixp_vals<wt_t, 1000,512>(fc_weight, fixp_fc_weight, root_dir + VAR_NAME(fc_weight));
+    // load_fp_and_fixp_vals<wt_t, 1000>(fc_bias, fixp_fc_bias, root_dir + VAR_NAME(fc_bias));
 }
 
 int main(int argc, char *argv[])
@@ -168,52 +166,52 @@ int main(int argc, char *argv[])
 
     load_from_files();
  
-    resnet18(
-        fixp_input,
-        fixp_output,
-        fixp_conv1_weight,
-        fixp_conv1_bias,
-        fixp_l10_c1_weight,
-        fixp_l10_c1_bias,
-        fixp_l10_c2_weight,
-        fixp_l10_c2_bias,
-        fixp_l11_c1_weight,
-        fixp_l11_c1_bias,
-        fixp_l11_c2_weight,
-        fixp_l11_c2_bias,
-        fixp_l2_ds_weight,
-        fixp_l2_ds_bias,
-        fixp_l20_c1_weight,
-        fixp_l20_c1_bias,
-        fixp_l20_c2_weight,
-        fixp_l20_c2_bias,
-        fixp_l21_c1_weight,
-        fixp_l21_c1_bias,
-        fixp_l21_c2_weight,
-        fixp_l21_c2_bias,
-        fixp_l3_ds_weight,
-        fixp_l3_ds_bias,
-        fixp_l30_c1_weight,
-        fixp_l30_c1_bias,
-        fixp_l30_c2_weight,
-        fixp_l30_c2_bias,
-        fixp_l31_c1_weight,
-        fixp_l31_c1_bias,
-        fixp_l31_c2_weight,
-        fixp_l31_c2_bias,
-        fixp_l4_ds_weight,
-        fixp_l4_ds_bias,
-        fixp_l40_c1_weight,
-        fixp_l40_c1_bias,
-        fixp_l40_c2_weight,
-        fixp_l40_c2_bias,
-        fixp_l41_c1_weight,
-        fixp_l41_c1_bias,
-        fixp_l41_c2_weight,
-        fixp_l41_c2_bias,
-        fixp_fc_weight,
-        fixp_fc_bias
-    );
+    // resnet18(
+    //     fixp_input,
+    //     fixp_output,
+    //     fixp_conv1_weight,
+    //     fixp_conv1_bias,
+    //     fixp_l10_c1_weight,
+    //     fixp_l10_c1_bias,
+    //     fixp_l10_c2_weight,
+    //     fixp_l10_c2_bias,
+    //     fixp_l11_c1_weight,
+    //     fixp_l11_c1_bias,
+    //     fixp_l11_c2_weight,
+    //     fixp_l11_c2_bias,
+    //     fixp_l2_ds_weight,
+    //     fixp_l2_ds_bias,
+    //     fixp_l20_c1_weight,
+    //     fixp_l20_c1_bias,
+    //     fixp_l20_c2_weight,
+    //     fixp_l20_c2_bias,
+    //     fixp_l21_c1_weight,
+    //     fixp_l21_c1_bias,
+    //     fixp_l21_c2_weight,
+    //     fixp_l21_c2_bias,
+    //     fixp_l3_ds_weight,
+    //     fixp_l3_ds_bias,
+    //     fixp_l30_c1_weight,
+    //     fixp_l30_c1_bias,
+    //     fixp_l30_c2_weight,
+    //     fixp_l30_c2_bias,
+    //     fixp_l31_c1_weight,
+    //     fixp_l31_c1_bias,
+    //     fixp_l31_c2_weight,
+    //     fixp_l31_c2_bias,
+    //     fixp_l4_ds_weight,
+    //     fixp_l4_ds_bias,
+    //     fixp_l40_c1_weight,
+    //     fixp_l40_c1_bias,
+    //     fixp_l40_c2_weight,
+    //     fixp_l40_c2_bias,
+    //     fixp_l41_c1_weight,
+    //     fixp_l41_c1_bias,
+    //     fixp_l41_c2_weight,
+    //     fixp_l41_c2_bias,
+    //     fixp_fc_weight,
+    //     fixp_fc_bias
+    // );
 
     return 0;
 }

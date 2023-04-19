@@ -19,7 +19,7 @@ all: $(ALLOUT)
 conv.o : conv.cpp util.h
 	$(CC) $(CFLAG) -c $< -o $@
 
-sim : sim.cpp util.h conv.h
+sim : sim.cpp
 	$(CC) $(CFLAG) -c $< -o $@
 
 clean:
