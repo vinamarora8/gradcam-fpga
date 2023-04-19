@@ -10,12 +10,16 @@ CC      = g++
 
 CFLAG += -DCSIM_DEBUG # TODO Might have to remove this when building for syn
 
-ALLOUT+= csim.out
+ALLOUT+= conv.o
+ALLOUT+= sim
 
 all: IFLAG +=  -g -DCSIM_DEBUG
 all: $(ALLOUT) 
 
 conv.o : conv.cpp util.h
+	$(CC) $(CFLAG) -c $< -o $@
+
+sim : sim.cpp util.h conv.h
 	$(CC) $(CFLAG) -c $< -o $@
 
 clean:
