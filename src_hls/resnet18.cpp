@@ -100,12 +100,10 @@ void resnet18(
     conv<64, 56, 56,
         64, 56, 56,
         3, 3, 1, 1, true, false>(l10_c1_out, maxpool_out, l10_c1_weight, l10_c1_bias, nullptr);
-    for (int i = 0; i < 10; i++)
-        std::cout << l10_c1_out[0][0][i] << std::endl;
-    WRITE_TO_FILE(l10_c1_out, 64, 56, 56);
     conv<64, 56, 56,
         64, 56, 56,
         3, 3, 1, 1, true, true>(l10_c2_out, l10_c1_out, l10_c2_weight, l10_c2_bias, maxpool_out);
+    WRITE_TO_FILE(l10_c1_out, 64, 56, 56);
     WRITE_TO_FILE(l10_c2_out, 64, 56, 56);
     // block 1
     fm_t l11_c1_out[64][56][56];
@@ -218,6 +216,6 @@ void resnet18(
 
     
     // fc
-    linear_fc<512, 1000, true>(avgpool_out, output, fc_weight, fc_bias);
+    linear_fc<512, 1000>(avgpool_out, output, fc_weight, fc_bias);
     WRITE_TO_FILE(output, 1000, 1, 1);
 }

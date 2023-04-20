@@ -1,5 +1,6 @@
 import numpy as np
 import os
+import matplotlib.pyplot as plt
 
 py_out_path  = 'expected_activations/n01739381_vine_snake/'
 cpp_out_path = 'src_hls/out/'
@@ -32,12 +33,25 @@ file_list = [
 ]
 
 for file_name  in file_list:
-    cpp_output = np.fromfile(os.path.join(cpp_out_path, file_name), dtype=float)
-    py_output  = np.fromfile(os.path.join(py_out_path,  file_name), dtype=float)
+    cpp_output = np.fromfile(os.path.join(cpp_out_path, file_name), dtype=np.float32)
+    py_output  = np.fromfile(os.path.join(py_out_path,  file_name), dtype=np.float32)
 
     mse = (np.square(py_output - cpp_output)).mean()
+    max_err = np.max(np.abs((py_output - cpp_output) / (py_output + 1e-20)))
+    max_err_idx = np.argmax(np.abs((py_output - cpp_output) / py_output))
     print(f"Checking {file_name}")
+    print(f"Size: {cpp_output.size} == {py_output.size}")
     print(f"MSE: {mse}")
+    print(f"Max error: {max_err}, @ {cpp_output[max_err_idx]} - {py_output[max_err_idx]}")
     print(py_output[:10])
     print(cpp_output[:10])
     print()
+
+    if file_name == "output.bin":
+        print(f"Expected classificiation: {np.argmax(py_output)}")
+        print(f"Actual classificiation: {np.argmax(cpp_output)}")
+
+        '''
+        plt.plot(np.abs((py_output - cpp_output) / (py_output + 1e-30)))
+        plt.show()
+        '''
