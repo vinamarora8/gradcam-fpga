@@ -110,6 +110,7 @@ void write_to_file(const std::string& filename, const std::vector<int>& dims, co
     num_elements *= dims[i];
   }
 
+  std::cout << "Writing to file: " << filename << std::endl;
   const float* float_array = reinterpret_cast<const float*>(array);
 
   std::ofstream output_file(filename, std::ios::out | std::ios::binary);
