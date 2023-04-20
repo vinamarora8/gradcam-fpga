@@ -7,11 +7,19 @@
 // Compute the output dimension given the input dimension, kernel dimension,
 // stride and padding
 
+static fm_t relu(fm_t x)
+{
+    if (x < 0)
+        x = 0;
+
+    return x;
+}
+
 template <int ID, int IH, int IW, 
           int OD, int OH, int OW,
           int KH, int KW, 
           int ST, int PD,
-          bool BIAS, bool RES>
+          bool BIAS, bool RES, bool RELU=true>
 void conv (
         fm_t y[OD][OH][OW],
         fm_t x[ID][IH][IW],
@@ -26,6 +34,7 @@ void conv (
     for (int of = 0; of < OD; of++)
         for (int oh = 0; oh < OH; oh++)
             for (int ow = 0; ow < OW; ow++)
+            {
                 for (int id = 0; id < ID; id++)
                     for (int kh = 0; kh < KH; kh++)
                         for (int kw = 0; kw < KW; kw++)
@@ -49,4 +58,8 @@ void conv (
 
                             y[of][oh][ow] += x[id][i][j] * weights[of][id][kh][kw];
                         }
+
+                if (RELU)
+                    y[of][oh][ow] = relu(y[of][oh][ow]);
+            }
 }
