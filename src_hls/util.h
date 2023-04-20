@@ -137,6 +137,12 @@ template <typename fixp_t, int F, int C, int M, int N>
 void load_fp_and_fixp_vals(float fp_arr[F][C][M][N], fixp_t fixp_arr[F][C][M][N], const std::string filepath){
 
     std::ifstream input(filepath, std::ios::in | std::ios::binary);
+
+    if (input.fail()) {
+        std::cout << "Failed to open file: " << filepath << std::endl;
+        exit(1);
+    }
+
     input.read((char*) (fp_arr), F*C*M*N*sizeof(float));
     input.close();
 
@@ -155,6 +161,12 @@ template <typename fixp_t, int C, int M, int N>
 void load_fp_and_fixp_vals(float fp_arr[C][M][N], fixp_t fixp_arr[C][M][N], const std::string filepath){
 
     std::ifstream input(filepath, std::ios::in | std::ios::binary);
+
+    if (input.fail()) {
+        std::cout << "Failed to open file: " << filepath << std::endl;
+        exit(1);
+    }
+
     input.read((char*) (fp_arr), C*M*N*sizeof(float));
     input.close();
 
@@ -171,6 +183,12 @@ template <typename fixp_t, int M, int N>
 void load_fp_and_fixp_vals(float fp_arr[M][N], fixp_t fixp_arr[M][N], const std::string filepath){
 
     std::ifstream input(filepath, std::ios::in | std::ios::binary);
+
+    if (input.fail()) {
+        std::cout << "Failed to open file: " << filepath << std::endl;
+        exit(1);
+    }
+
     input.read((char*) (fp_arr), M*N*sizeof(float));
     input.close();
 
@@ -185,6 +203,12 @@ template <typename fixp_t, int N>
 void load_fp_and_fixp_vals(float fp_arr[N], fixp_t fixp_arr[N], const std::string filepath){
 
     std::ifstream input(filepath, std::ios::in | std::ios::binary);
+
+    if (input.fail()) {
+        std::cout << "Failed to open file: " << filepath << std::endl;
+        exit(1);
+    }
+
     input.read((char*) (fp_arr), N*sizeof(float));
     input.close();
 

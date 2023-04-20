@@ -76,6 +76,8 @@ void resnet18(
     
     std::string root_dir = "out/";
 
+    WRITE_TO_FILE(input, 3, 224, 224);
+
     // conv1
     fm_t conv1_out[64][112][112];
     conv<3, 224, 224,
