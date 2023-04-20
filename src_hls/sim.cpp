@@ -4,9 +4,7 @@
 #include <string>
 #include <vector>
 
-#ifdef CSIM_DEBUG
-    #define CSIM_DEBUG
-#endif
+#define CSIM_DEBUG
 
 #include "util.h"
 #include "conv.h"
