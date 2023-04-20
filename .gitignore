@@ -15,3 +15,6 @@ notebooks/
 *.o
 *.obj
 a.out
+
+src_hls/*.log
+src_hls/sim
