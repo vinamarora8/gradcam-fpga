@@ -6,9 +6,7 @@
 #include "avg_pool.h"
 #include "linear_fc.h"
 
-#ifndef WRITE_TO_FILE_ENABLED
-    #define WRITE_TO_FILE_ENABLED false
-#endif
+//#define WRITE_TO_FILE_ENABLED
 
 void resnet18(
         fm_t input[3][224][224],
@@ -213,7 +211,7 @@ void resnet18(
     fm_t l41_c2_out[512][7][7];
     conv<512, 7, 7,
         512, 7, 7,
-        3, 3, 2, 1, true, false>(l41_c1_out, l40_c2_out, l41_c1_weight, l41_c1_bias, nullptr);
+        3, 3, 1, 1, true, false>(l41_c1_out, l40_c2_out, l41_c1_weight, l41_c1_bias, nullptr);
     conv<512, 7, 7,
         512, 7, 7,
         3, 3, 1, 1, true, true>(l41_c2_out, l41_c1_out, l41_c2_weight, l41_c2_bias, l40_c2_out);
