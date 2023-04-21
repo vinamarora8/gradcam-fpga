@@ -1,14 +1,14 @@
 open_project proj
 
 # this is your top module 
-set_top resnet18
+set_top top
 
 # this is your file that to be synthesized as FPGA design
 # TODO
-add_files real_matmul.cpp
+add_files top.cpp
 
 # this is your testbench (specified by -tb option)
-add_files -tb main.cpp
+add_files -tb sim.cpp
 
 open_solution "solution1" -flow_target vitis
 
