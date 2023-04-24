@@ -69,7 +69,9 @@ void resnet18(
         wt_t l41_c2_bias[512],
         // fc
         wt_t fc_weight[1000][512],
-        wt_t fc_bias[1000]
+        wt_t fc_bias[1000],
+        // CAM 
+        fm_t l41_c2_out[512][7][7]
         )
 {
     
@@ -196,7 +198,7 @@ void resnet18(
     WRITE_TO_FILE(l40_c2_out, 512, 7, 7);
     // block 1
     fm_t l41_c1_out[512][7][7];
-    fm_t l41_c2_out[512][7][7];
+    // fm_t l41_c2_out[512][7][7];
     conv<512, 7, 7,
         512, 7, 7,
         3, 3, 1, 1, true, false>(l41_c1_out, l40_c2_out, l41_c1_weight, l41_c1_bias, nullptr);

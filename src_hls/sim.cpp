@@ -9,6 +9,7 @@
 #include "util.h"
 #include "conv.h"
 #include "resnet18.cpp"
+#include "cam.cpp"
 
 // Floating point precision arrays
 float input[3][224][224];
@@ -112,6 +113,9 @@ wt_t fixp_l41_c2_bias[512];
 wt_t fixp_fc_weight[1000][512];
 wt_t fixp_fc_bias[1000];
 
+// CAM related
+fm_t fixp_l41_c2_out[512][7][7];
+
 void load_from_files(){
     std::string root_dir = "../bin/";
 
@@ -210,8 +214,11 @@ int main(int argc, char *argv[])
         fixp_l41_c2_weight,
         fixp_l41_c2_bias,
         fixp_fc_weight,
-        fixp_fc_bias
+        fixp_fc_bias,
+        fixp_l41_c2_out
     );
+
+    cam(fixp_l41_c2_out, fixp_fc_weight, fixp_output);
 
     return 0;
 }
