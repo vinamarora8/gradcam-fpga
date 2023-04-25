@@ -7,6 +7,7 @@
 #define CSIM_DEBUG
 
 #include "util.h"
+#include "sim_util.cpp"
 #include "conv.h"
 #include "resnet18.cpp"
 

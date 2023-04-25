@@ -1,14 +1,15 @@
-#define CSIM_DEBUG
-
 #include "util.h"
 #include "conv.h"
 #include "max_pool.h"
 #include "avg_pool.h"
 #include "linear_fc.h"
 
-#define WRITE_TO_FILE_ENABLED
+#ifdef CSIM_DEBUG
+#   define WRITE_TO_FILE_ENABLED
+#endif
 
 #ifdef WRITE_TO_FILE_ENABLED
+std::string root_dir = "out/";
 #define WRITE_TO_FILE(var, dim0, dim1, dim2) \
     { \
         std::vector<int> dims(3); \
@@ -74,7 +75,6 @@ void resnet18(
         )
 {
     
-    std::string root_dir = "out/";
 
     WRITE_TO_FILE(input, 3, 224, 224);
 

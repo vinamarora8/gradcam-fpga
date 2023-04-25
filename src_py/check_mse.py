@@ -1,7 +1,5 @@
 import numpy as np
 import os
-import matplotlib.pyplot as plt
-
 py_out_path  = 'expected_activations/n01739381_vine_snake/'
 cpp_out_path = 'src_hls/out/'
 
