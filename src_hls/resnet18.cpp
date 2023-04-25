@@ -18,8 +18,17 @@ std::string root_dir = "out/";
         dims[2] = dim2; \
         write_to_file(root_dir + VAR_NAME(var) + ".bin", dims, var); \
     }
+#define WRITE_TO_FILE_NAME(var, name, dim0, dim1, dim2) \
+    { \
+        std::vector<int> dims(3); \
+        dims[0] = dim0; \
+        dims[1] = dim1; \
+        dims[2] = dim2; \
+        write_to_file(root_dir + name + ".bin", dims, var); \
+    }
 #else
 #define WRITE_TO_FILE(var, dim0, dim1, dim2)
+#define WRITE_TO_FILE_NAME(var, name, dim0, dim1, dim2)
 #endif
 
 void resnet18(
@@ -95,41 +104,39 @@ void resnet18(
 
     // layer 1 
     // block 0
-    fm_t l10_c1_out[64][56][56];
-    fm_t l10_c2_out[64][56][56];
+    fm_t l1_out0[64][56][56];
+    fm_t l1_out1[64][56][56];
     conv<64, 56, 56,
         64, 56, 56,
-        3, 3, 1, 1, true, false>(l10_c1_out, maxpool_out, l10_c1_weight, l10_c1_bias, nullptr);
+        3, 3, 1, 1, true, false>(l1_out0, maxpool_out, l10_c1_weight, l10_c1_bias, nullptr);
     conv<64, 56, 56,
         64, 56, 56,
-        3, 3, 1, 1, true, true>(l10_c2_out, l10_c1_out, l10_c2_weight, l10_c2_bias, maxpool_out);
-    WRITE_TO_FILE(l10_c1_out, 64, 56, 56);
-    WRITE_TO_FILE(l10_c2_out, 64, 56, 56);
+        3, 3, 1, 1, true, true>(l1_out1, l1_out0, l10_c2_weight, l10_c2_bias, maxpool_out);
+    WRITE_TO_FILE_NAME(l1_out0, "l10_c1_out", 64, 56, 56);
+    WRITE_TO_FILE_NAME(l1_out1, "l10_c2_out", 64, 56, 56);
     // block 1
-    fm_t l11_c1_out[64][56][56];
-    fm_t l11_c2_out[64][56][56];
     conv<64, 56, 56,
         64, 56, 56,
-        3, 3, 1, 1, true, false>(l11_c1_out, l10_c2_out, l11_c1_weight, l11_c1_bias, nullptr);
+        3, 3, 1, 1, true, false>(l1_out0, l1_out1, l11_c1_weight, l11_c1_bias, nullptr);
     conv<64, 56, 56,
         64, 56, 56,
-        3, 3, 1, 1, true, true>(l11_c2_out, l11_c1_out, l11_c2_weight, l11_c2_bias, l10_c2_out);
-    WRITE_TO_FILE(l11_c1_out, 64, 56, 56);
-    WRITE_TO_FILE(l11_c2_out, 64, 56, 56);
+        3, 3, 1, 1, true, true>(l1_out1, l1_out0, l11_c2_weight, l11_c2_bias, l1_out1);
+    WRITE_TO_FILE_NAME(l1_out0, "l11_c1_out", 64, 56, 56);
+    WRITE_TO_FILE_NAME(l1_out1, "l11_c2_out", 64, 56, 56);
 
     // layer 2
     // downsample
     fm_t l2_ds_out[128][28][28];
     conv<64, 56, 56,
         128, 28, 28,
-        1, 1, 2, 0, true, false, false>(l2_ds_out, l11_c2_out, l2_ds_weight, l2_ds_bias, nullptr);
+        1, 1, 2, 0, true, false, false>(l2_ds_out, l1_out1, l2_ds_weight, l2_ds_bias, nullptr);
     WRITE_TO_FILE(l2_ds_out, 128, 28, 28);
     // block 0
     fm_t l20_c1_out[128][28][28];
     fm_t l20_c2_out[128][28][28];
     conv<64, 56, 56,
         128, 28, 28,
-        3, 3, 2, 1, true, false>(l20_c1_out, l11_c2_out, l20_c1_weight, l20_c1_bias, nullptr);
+        3, 3, 2, 1, true, false>(l20_c1_out, l1_out1, l20_c1_weight, l20_c1_bias, nullptr);
     conv<128, 28, 28,
         128, 28, 28,
         3, 3, 1, 1, true, true>(l20_c2_out, l20_c1_out, l20_c2_weight, l20_c2_bias, l2_ds_out);
