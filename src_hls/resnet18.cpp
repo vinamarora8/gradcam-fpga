@@ -180,39 +180,36 @@ void resnet18(
 
 
     // layer 4
+    fm_t l4_out0[512][7][7];
+    fm_t l4_out1[512][7][7];
     // downsample
-    fm_t l4_ds_out[512][7][7];
     conv<256, 14, 14,
         512, 7, 7,
-        1, 1, 2, 0, true, false, false>(l4_ds_out, l3_out1, l4_ds_weight, l4_ds_bias, nullptr);
-    WRITE_TO_FILE(l4_ds_out, 512, 7, 7);
+        1, 1, 2, 0, true, false, false>(l4_out1, l3_out1, l4_ds_weight, l4_ds_bias, nullptr);
+    WRITE_TO_FILE_NAME(l4_out1, "l4_ds_out", 512, 7, 7);
     // block 0
-    fm_t l40_c1_out[512][7][7];
-    fm_t l40_c2_out[512][7][7];
     conv<256, 14, 14,
         512, 7, 7,
-        3, 3, 2, 1, true, false>(l40_c1_out, l3_out1, l40_c1_weight, l40_c1_bias, nullptr);
+        3, 3, 2, 1, true, false>(l4_out0, l3_out1, l40_c1_weight, l40_c1_bias, nullptr);
     conv<512, 7, 7,
         512, 7, 7,
-        3, 3, 1, 1, true, true>(l40_c2_out, l40_c1_out, l40_c2_weight, l40_c2_bias, l4_ds_out);
-    WRITE_TO_FILE(l40_c1_out, 512, 7, 7);
-    WRITE_TO_FILE(l40_c2_out, 512, 7, 7);
+        3, 3, 1, 1, true, true>(l4_out1, l4_out0, l40_c2_weight, l40_c2_bias, l4_out1);
+    WRITE_TO_FILE_NAME(l4_out0, "l40_c1_out", 512, 7, 7);
+    WRITE_TO_FILE_NAME(l4_out1, "l40_c2_out", 512, 7, 7);
     // block 1
-    fm_t l41_c1_out[512][7][7];
-    fm_t l41_c2_out[512][7][7];
     conv<512, 7, 7,
         512, 7, 7,
-        3, 3, 1, 1, true, false>(l41_c1_out, l40_c2_out, l41_c1_weight, l41_c1_bias, nullptr);
+        3, 3, 1, 1, true, false>(l4_out0, l4_out1, l41_c1_weight, l41_c1_bias, nullptr);
     conv<512, 7, 7,
         512, 7, 7,
-        3, 3, 1, 1, true, true>(l41_c2_out, l41_c1_out, l41_c2_weight, l41_c2_bias, l40_c2_out);
-    WRITE_TO_FILE(l41_c1_out, 512, 7, 7);
-    WRITE_TO_FILE(l41_c2_out, 512, 7, 7);
+        3, 3, 1, 1, true, true>(l4_out1, l4_out0, l41_c2_weight, l41_c2_bias, l4_out1);
+    WRITE_TO_FILE_NAME(l4_out0, "l41_c1_out", 512, 7, 7);
+    WRITE_TO_FILE_NAME(l4_out1, "l41_c2_out", 512, 7, 7);
 
 
     // avgpool
     fm_t avgpool_out[512];
-    avg_pool<512, 7, 7>(l41_c2_out, avgpool_out);
+    avg_pool<512, 7, 7>(l4_out1, avgpool_out);
     WRITE_TO_FILE(avgpool_out, 512, 1, 1);
 
     
