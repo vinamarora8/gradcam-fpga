@@ -2,7 +2,7 @@ from traitlets.config.application import T
 from torchvision.models.resnet import resnet152
 import torch
 import torch.nn as nn
-from torchvision.models import resnet152, ResNet152_Weights, resnet18, ResNet18_Weights, VGG16_Weights, vgg16
+from torchvision.models import resnet152, ResNet152_Weights, resnet18, ResNet18_Weights
 from torchvision.datasets import ImageFolder
 from torchvision import transforms
 from torch.utils import data
@@ -15,32 +15,48 @@ from google.colab.patches import cv2_imshow
 from IPython.display import Image
 import cv2
 
+is18 = not False
+is152 = not is18
 
-weights = VGG16_Weights.IMAGENET1K_V1
+if (is18):
+    weights = ResNet18_Weights.IMAGENET1K_V1
+else:
+    weights = ResNet152_Weights.IMAGENET1K_V1
 
-# file_path = "/content/sample_data/n02028035_redshank.jpeg"
+#file_path = "/content/sample_data/n02028035_redshank.jpeg"
 # file_path = "/content/sample_data/n04146614_school_bus.jpeg"
-file_path = "/content/sample_data/n04141975_scale.jpeg"
+# file_path = "/content/sample_data/n04141975_scale.jpeg"
 # file_path = "/content/sample_data/cat_heatmap.png"
-
-
-# print(vgg16(weights=weights))
+file_path = "/content/sample_data/n01739381_vine_snake.jpeg"
 
 # ResNet Class
-class VGG(nn.Module):
+class ResNet(nn.Module):
     def __init__(self):
-        super(VGG, self).__init__()
+        super(ResNet, self).__init__()
         
-        self.vgg = vgg16(weights=weights)
+        # define the resnet152
+        if (is18):
+            self.resnet = resnet18(weights=weights)
+        else:
+            self.resnet = resnet152(weights=weights)
         
         # isolate the feature blocks
-        self.features = self.vgg.features 
+        self.features = nn.Sequential(self.resnet.conv1,
+                                      self.resnet.bn1,
+                                      # self.resnet.relu,
+                                      # self.resnet.maxpool,
+                                      nn.ReLU(),
+                                      nn.MaxPool2d(kernel_size=3, stride=2, padding=1, dilation=1, ceil_mode=False),
+                                      self.resnet.layer1, 
+                                      self.resnet.layer2, 
+                                      self.resnet.layer3, 
+                                      self.resnet.layer4)
         
         # average pooling layer
-        self.avgpool = self.vgg.avgpool
+        self.avgpool = self.resnet.avgpool
         
         # classifier
-        self.classifier = self.vgg.classifier
+        self.classifier = self.resnet.fc
         
         # gradient placeholder
         self.gradient = None
@@ -83,48 +99,58 @@ i = read_image(file_path)
 img = preprocess(i).unsqueeze(0)
 
 # init the resnet
-vgg = VGG()
+resnet = ResNet()
 
 # set the evaluation mode
-_ = vgg.eval()
+_ = resnet.eval()
 
 # get the image
 #img, _ = next(iter(dataloader))
 
 # forward pass
-pred = vgg(img)
+pred = resnet(img)
 
 
 prediction = pred.squeeze(0).softmax(0)
 class_id = prediction.argmax().item()
+print(f"Class ID is {class_id}")
 score = prediction[class_id].item()
 category_name = weights.meta["categories"][class_id]
 pprint(f"{category_name}: {100 * score:.1f}%")
 
-pred.argmax(dim=1) # prints tensor([2])
+#pred.argmax(dim=1) # prints tensor([2])
 
 # get the gradient of the output with respect to the parameters of the model
 pred[:, 2].backward()
 
 # pull the gradients out of the model
-gradients = vgg.get_gradient()
+gradients = resnet.get_gradient()
 print("Gradients size is " + str(gradients.size()))
 
 # pool the gradients across the channels
 pooled_gradients = torch.mean(gradients, dim=[0, 2, 3])
 print("Pooled gradients size is " + str(pooled_gradients.size()))
+print(pooled_gradients[:10])
+
+debug_w = resnet.resnet.fc.weight
+print("FC wts size is " + str(debug_w.size()))
+print(debug_w[class_id])
 
 # get the activations of the last convolutional layer
-activations = vgg.get_activations(img).detach()
+activations = resnet.get_activations(img).detach()
 print("Activations size is " + str(activations.size()))
 
 # weight the channels by corresponding gradients
 # Last conv layer has 512 channels
 for i in range(512):
     activations[:, i, :, :] *= pooled_gradients[i]
+
+print("Post mult activations size is " + str(activations.size()))
     
 # average the channels of the activations
 heatmap = torch.mean(activations, dim=1).squeeze()
+print("Heatmap size is " + str(heatmap.size()))
+print(heatmap)
 
 # relu on top of the heatmap
 # expression (2) in https://arxiv.org/pdf/1610.02391.pdf
