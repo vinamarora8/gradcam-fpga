@@ -2,8 +2,9 @@
 #include "resnet18.cpp"
 
 void load_from_DRAM(wt_t *DRAM, wt_t *local, int size) {
+#pragma HLS inline off
     for (int i = 0; i < size; i++) {
-    #pragma HLS unroll 1
+    #pragma HLS unroll factor=1
         local[i] = DRAM[i];
     }
 }
@@ -62,7 +63,6 @@ void top(
         wt_t DRAM_fc_bias[1000]
         )
 {
-
         fm_t input[3][224][224];
         fm_t output[1000];
         wt_t conv1_weight[64][3][7][7];

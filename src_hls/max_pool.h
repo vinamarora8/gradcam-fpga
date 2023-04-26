@@ -16,13 +16,19 @@ void maxpool2d(
     assert(OW == CONV_DIM(IW, KW, PD, ST));
 
     for (int c = 0; c < OD; c++) {
+#pragma HLS pipeline off
         for (int h = 0; h < OH; h++) {
+#pragma HLS pipeline off
             for (int w = 0; w < OW; w++) 
+#pragma HLS pipeline off
             {
                 fm_t max_val = -1e30;
                 for (int i = 0; i < KH; i++) 
+#pragma HLS pipeline off
                 {
                     for (int j = 0; j < KW; j++) 
+#pragma HLS unroll factor=1
+#pragma HLS pipeline off
                     {
                         int row_idx = (ST * h) + i - PD;
                         int col_idx = (ST * w) + j - PD;

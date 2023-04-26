@@ -18,9 +18,12 @@ void linear_fc(
 )
 {
     for (int j = 0; j < NO; j++){
+#pragma HLS pipeline off
         fm_t sum = biases[j];
 
         for (int i = 0; i < NI; i++){
+#pragma HLS pipeline off
+#pragma HLS unroll factor=1
             sum += weights[j][i] * in[i];
         }
 
