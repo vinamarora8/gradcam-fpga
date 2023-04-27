@@ -6,7 +6,7 @@ template<int IN_BUF_DEPTH, int IN_BUF_HEIGHT, int IN_BUF_WIDTH,
          int TILE_HEIGHT, int TILE_WIDTH, int PADDING>
 void load_input_tile_block_from_DRAM (
     fm_t in_fm_buf[IN_BUF_DEPTH][IN_BUF_HEIGHT][IN_BUF_WIDTH],
-    fm_t in_fm[IN_FM_DEPTH][IN_FM_HEIGHT][IN_FM_WIDTH],
+    fm_t dram[],
     int  ti,
     int  tj
 )
@@ -41,7 +41,8 @@ void load_input_tile_block_from_DRAM (
                 }
                 else
                 {
-                    in_fm_buf[c][i][j] = in_fm[c][idx_h][idx_w];
+                    int dram_idx = idx_w + idx_h*IN_FM_WIDTH + c*IN_FM_WIDTH*IN_FM_HEIGHT;
+                    in_fm_buf[c][i][j] = dram[dram_idx];
                 }
 
             }
@@ -91,7 +92,7 @@ void load_layer_params_from_DRAM (
 template<int OUT_BUF_DEPTH, int OUT_BUF_HEIGHT, int OUT_BUF_WIDTH,
          int OUT_FM_DEPTH, int OUT_FM_HEIGHT, int OUT_FM_WIDTH>
 void store_output_tile_to_DRAM (
-    fm_t out_fm[OUT_FM_DEPTH][OUT_FM_HEIGHT][OUT_FM_WIDTH],
+    fm_t out_fm[],
     fm_t out_fm_buf[OUT_BUF_DEPTH][OUT_BUF_HEIGHT][OUT_BUF_WIDTH],
     int  ti,
     int  tj,
@@ -112,14 +113,18 @@ void store_output_tile_to_DRAM (
             OUTPUT_BUFFER_WIDTH:
             for(int j = 0; j < OUT_BUF_WIDTH; j++)
             {
+                int dram_idx = (width_offset + j) + (height_offset + i)*OUT_FM_WIDTH + (depth_offset + f)*OUT_FM_WIDTH*OUT_FM_HEIGHT;
+
                 // ReLU in-place
                 if(relu & (out_fm_buf[f][i][j] < (fm_t) 0))
                 {
-                    out_fm[depth_offset + f][height_offset + i][width_offset + j] = (fm_t) 0;
+                    //out_fm[depth_offset + f][height_offset + i][width_offset + j] = (fm_t) 0;
+                    out_fm[dram_idx] = (fm_t) 0;
                 }
                 else
                 {
-                    out_fm[depth_offset + f][height_offset + i][width_offset + j] = out_fm_buf[f][i][j];
+                    //out_fm[depth_offset + f][height_offset + i][width_offset + j] = out_fm_buf[f][i][j];
+                    out_fm[dram_idx] = out_fm_buf[f][i][j];
                 }
             }
         }

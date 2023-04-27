@@ -90,11 +90,6 @@ void resnet18(
 
     // conv1
     fm_t conv1_out[64][112][112];
-    /*
-    conv<3, 224, 224,
-        64, 112, 112,
-        7, 7, 2, 3, true, false>(conv1_out, input, conv1_weight, conv1_bias, nullptr);
-    */
     tiled_conv
         <3, 224, 224,
         64, 112, 112,
@@ -102,11 +97,7 @@ void resnet18(
         3, 38, 38,
         4, 16, 16,
         7, 7, 2, 3>
-        (input, conv1_weight, conv1_bias, conv1_out, true);
-
-         
-
-
+        (input[0][0], conv1_weight, conv1_bias, conv1_out[0][0], true);
     WRITE_TO_FILE(conv1_out, 64, 112, 112);
 
 

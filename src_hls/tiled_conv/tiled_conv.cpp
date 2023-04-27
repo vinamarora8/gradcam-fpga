@@ -12,10 +12,10 @@ int IN_BUF_DEPTH, int IN_BUF_HEIGHT, int IN_BUF_WIDTH,
 int OUT_BUF_DEPTH, int OUT_BUF_HEIGHT, int OUT_BUF_WIDTH,
 int KERNEL_HEIGHT, int KERNEL_WIDTH, int STRIDE, int PADDING>
 void tiled_conv (
-    fm_t input_feature_map[IN_FM_DEPTH][IN_FM_HEIGHT][IN_FM_WIDTH],
+    fm_t input_feature_map[],
     wt_t layer_weights[OUT_FM_DEPTH][IN_FM_DEPTH][KERNEL_HEIGHT][KERNEL_WIDTH],
     wt_t layer_bias[OUT_FM_DEPTH],
-    fm_t output_feature_map[OUT_FM_DEPTH][OUT_FM_HEIGHT][OUT_FM_WIDTH],
+    fm_t output_feature_map[],
     bool relu
 )
 {
@@ -65,18 +65,6 @@ void tiled_conv (
             std::cout << "Processing Tile " << ti*N_TILE_COLS + tj + 1;
             std::cout << "/" << N_TILE_ROWS * N_TILE_COLS << std::endl;
 
-            /*
-            //--------------------------------------------------------------------------
-            // TODO: Your code for Task B and Task C goes here
-            //
-            // Implement the required code to run convolution on an entire tile.
-            // Refer to utils.cpp for the required functions
-            //
-            // Hint: You need to split the filter kernels into sub-groups
-            //       for processing.
-            //--------------------------------------------------------------------------
-            */
-
             const int kernel_groups = OUT_FM_DEPTH / OUT_BUF_DEPTH;
 
             load_input_tile_block_from_DRAM
@@ -94,7 +82,8 @@ void tiled_conv (
                     OUT_FM_DEPTH, IN_FM_DEPTH>
                     (conv_wt_buf, conv_bias_buf, layer_weights, layer_bias, tk);
                 
-                conv_small<OUT_BUF_DEPTH, OUT_BUF_HEIGHT, OUT_BUF_WIDTH,
+                conv_small
+                    <OUT_BUF_DEPTH, OUT_BUF_HEIGHT, OUT_BUF_WIDTH,
                     IN_BUF_DEPTH, IN_BUF_HEIGHT, IN_BUF_WIDTH,
                     KERNEL_HEIGHT, KERNEL_WIDTH, STRIDE, PADDING>
                     (conv_out_buf, conv_in_buf, conv_wt_buf, conv_bias_buf);
