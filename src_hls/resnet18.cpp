@@ -3,6 +3,7 @@
 #include "max_pool.h"
 #include "avg_pool.h"
 #include "linear_fc.h"
+#include "tiled_conv/tiled_conv.cpp"
 
 #ifdef CSIM_DEBUG
 #   define WRITE_TO_FILE_ENABLED
@@ -89,9 +90,23 @@ void resnet18(
 
     // conv1
     fm_t conv1_out[64][112][112];
+    /*
     conv<3, 224, 224,
         64, 112, 112,
         7, 7, 2, 3, true, false>(conv1_out, input, conv1_weight, conv1_bias, nullptr);
+    */
+    tiled_conv
+        <3, 224, 224,
+        64, 112, 112,
+        32, 32,
+        3, 38, 38,
+        4, 16, 16,
+        7, 7, 2, 3>
+        (input, conv1_weight, conv1_bias, conv1_out, true);
+
+         
+
+
     WRITE_TO_FILE(conv1_out, 64, 112, 112);
 
 

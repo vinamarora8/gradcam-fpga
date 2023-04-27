@@ -1,14 +1,15 @@
-#include "../util.h"
+#include "util.h"
 #include "conv.cpp"
 #include "io.cpp"
 #include <iostream>
+#include <cassert>
 
 template<
 int IN_FM_DEPTH, int IN_FM_HEIGHT, int IN_FM_WIDTH,
 int OUT_FM_DEPTH, int OUT_FM_HEIGHT, int OUT_FM_WIDTH,
-int OUT_BUF_DEPTH, int OUT_BUF_HEIGHT, int OUT_BUF_WIDTH,
-int IN_BUF_DEPTH, int IN_BUF_HEIGHT, int IN_BUF_WIDTH,
 int TILE_HEIGHT, int TILE_WIDTH,
+int IN_BUF_DEPTH, int IN_BUF_HEIGHT, int IN_BUF_WIDTH,
+int OUT_BUF_DEPTH, int OUT_BUF_HEIGHT, int OUT_BUF_WIDTH,
 int KERNEL_HEIGHT, int KERNEL_WIDTH, int STRIDE, int PADDING>
 void tiled_conv (
     fm_t input_feature_map[IN_FM_DEPTH][IN_FM_HEIGHT][IN_FM_WIDTH],
@@ -18,6 +19,17 @@ void tiled_conv (
     bool relu
 )
 {
+    const int MARGIN = 2 * PADDING;
+
+    std::cout << "OUT_BUF_HEIGHT: " << OUT_BUF_HEIGHT << std::endl;
+    std::cout << "TILE_HEIGHT: " << TILE_HEIGHT << std::endl;
+    std::cout << "STRIDE: " << STRIDE << std::endl;
+
+    assert(IN_BUF_HEIGHT == (TILE_HEIGHT + MARGIN));
+    assert(IN_BUF_WIDTH == (TILE_WIDTH + MARGIN));
+    assert(OUT_BUF_HEIGHT == (TILE_HEIGHT / STRIDE));
+    assert(OUT_BUF_WIDTH == (TILE_WIDTH / STRIDE));
+
     //--------------------------------------------------------------------------
     // Defines interface IO ports for HLS.
     //--------------------------------------------------------------------------
@@ -82,7 +94,7 @@ void tiled_conv (
                     OUT_FM_DEPTH, IN_FM_DEPTH>
                     (conv_wt_buf, conv_bias_buf, layer_weights, layer_bias, tk);
                 
-                conv<OUT_BUF_DEPTH, OUT_BUF_HEIGHT, OUT_BUF_WIDTH,
+                conv_small<OUT_BUF_DEPTH, OUT_BUF_HEIGHT, OUT_BUF_WIDTH,
                     IN_BUF_DEPTH, IN_BUF_HEIGHT, IN_BUF_WIDTH,
                     KERNEL_HEIGHT, KERNEL_WIDTH, STRIDE, PADDING>
                     (conv_out_buf, conv_in_buf, conv_wt_buf, conv_bias_buf);
@@ -90,7 +102,7 @@ void tiled_conv (
                 store_output_tile_to_DRAM
                     <OUT_BUF_DEPTH, OUT_BUF_HEIGHT, OUT_BUF_WIDTH,
                     OUT_FM_DEPTH, OUT_FM_HEIGHT, OUT_FM_WIDTH>
-                    (output_feature_map, conv_out_buf, ti, tj, tk);
+                    (output_feature_map, conv_out_buf, ti, tj, tk, relu);
 
             }
 
