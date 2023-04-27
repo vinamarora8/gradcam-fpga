@@ -37,7 +37,7 @@ for file_name  in file_list:
 
     mse = (np.square(py_output - cpp_output)).mean()
     max_err = np.max(np.abs((py_output - cpp_output) / (py_output + 1e-20)))
-    max_err_idx = np.argmax(np.abs((py_output - cpp_output) / py_output))
+    max_err_idx = np.argmax(np.abs((py_output - cpp_output) / (py_output + 1e-20)))
     print(f"Checking {file_name}")
     print(f"Size: {cpp_output.size} == {py_output.size}")
     print(f"MSE: {mse}")

@@ -32,20 +32,13 @@ void conv (
     assert(OW == CONV_DIM(IW, KW, PD, ST));
 
     for (int of = 0; of < OD; of++)
-#pragma HLS pipeline off
         for (int oh = 0; oh < OH; oh++)
-#pragma HLS pipeline off
             for (int ow = 0; ow < OW; ow++)
             {
-#pragma HLS unroll factor=1
-#pragma HLS pipeline off
                 for (int id = 0; id < ID; id++)
-#pragma HLS unroll factor=1
                     for (int kh = 0; kh < KH; kh++)
-#pragma HLS unroll factor=1
                         for (int kw = 0; kw < KW; kw++)
                         {
-#pragma HLS unroll factor=1
                             if (id == 0 && kh == 0 && kw == 0)
                             {
                                 if (RES)
