@@ -3,15 +3,17 @@
 
 template<
 int TILE_DEPTH, int TILE_HEIGHT, int TILE_WIDTH, int PADDING,
-int FM_HEIGHT, int FM_WIDTH
+int FM_DEPTH, int FM_HEIGHT, int FM_WIDTH
 >
 void load_fm_tile_block_from_DRAM (
     fm_t in_fm_buf[TILE_DEPTH][TILE_HEIGHT + 2*PADDING][TILE_WIDTH + 2*PADDING],
     const fm_t in_fm[],
-    const int  ti,
-    const int  tj
+    const int ti,
+    const int tj,
+    const int tk
 )
 {
+    const int depth_offset = tk * TILE_DEPTH;
     const int height_offset = ti * TILE_HEIGHT;
     const int width_offset  = tj * TILE_WIDTH;
 
@@ -30,6 +32,7 @@ void load_fm_tile_block_from_DRAM (
             INPUT_BUFFER_WIDTH:
             for(int j = 0; j < BUF_WIDTH; j++)
             {
+                int idx_d = depth_offset + c;
                 int idx_h = height_offset + i - P;
                 int idx_w = width_offset + j - P;
 

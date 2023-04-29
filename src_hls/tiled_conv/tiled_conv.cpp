@@ -14,7 +14,8 @@ void tiled_conv (
     const fm_t input_feature_map[IN_FM_DEPTH][IN_FM_HEIGHT][IN_FM_WIDTH],
     const wt_t layer_weights[OUT_FM_DEPTH][IN_FM_DEPTH][KERNEL_HEIGHT][KERNEL_WIDTH],
     const wt_t layer_bias[OUT_FM_DEPTH],
-    const bool relu
+    const bool relu,
+    const bool inplace_residual = false
 )
 {
     static_assert(TILE_HEIGHT % STRIDE == 0, "TILE_HEIGHT must be a multiple of STRIDE");
@@ -68,12 +69,27 @@ void tiled_conv (
 
             load_fm_tile_block_from_DRAM
                 <IN_BUF_DEPTH, TILE_HEIGHT, TILE_WIDTH, PADDING,
-                IN_FM_HEIGHT, IN_FM_WIDTH>
-                (conv_in_buf, input_feature_map[0][0], ti, tj);
+                IN_FM_DEPTH, IN_FM_HEIGHT, IN_FM_WIDTH>
+                (conv_in_buf, input_feature_map[0][0], ti, tj, 0);
 
             KERNEL_GRP:
             for (int tk = 0; tk < KERNEL_GRPS; tk++)
             {
+
+                if (inplace_residual)
+                {
+                    load_fm_tile_block_from_DRAM
+                        <OUT_BUF_DEPTH, OUT_BUF_HEIGHT, OUT_BUF_WIDTH, 0,
+                        OUT_FM_DEPTH, OUT_FM_HEIGHT, OUT_FM_WIDTH>
+                        (conv_out_buf, output_feature_map[0][0], ti, tj, tk);
+                }
+                else
+                {
+                    for (int f = 0; f < OUT_BUF_DEPTH; f++)
+                        for (int i = 0; i < OUT_BUF_HEIGHT; i++)
+                            for (int j = 0; j < OUT_BUF_WIDTH; j++)
+                                conv_out_buf[f][i][j] = (fm_t) 0;
+                }
 
                 load_layer_params_from_DRAM
                     <OUT_BUF_DEPTH, IN_BUF_DEPTH, KERNEL_HEIGHT, KERNEL_WIDTH,

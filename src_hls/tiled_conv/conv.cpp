@@ -29,7 +29,7 @@ OUT_FEAT:
                         {
                             if (id == 0 && kh == 0 && kw == 0)
                             {
-                                Y_buf[of][oh][ow] = B_buf[of];
+                                Y_buf[of][oh][ow] += B_buf[of];
                             }
 
                             int i = S*oh + kh;
