@@ -79,12 +79,6 @@ void resnet18(
             3, 3, 2, 1>(maxpool_out, conv1_out);
     WRITE_TO_FILE(maxpool_out, 64, 56, 56);
 
-    fm_t maxpool_out_copy[64][56][56];
-    for (int i = 0; i < 64*56*56; i++)
-    {
-        maxpool_out_copy[0][0][i] = maxpool_out[0][0][i];
-    }
-
     // layer 1 
     // block 0
     fm_t l1_out0[64][56][56];
