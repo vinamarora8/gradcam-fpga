@@ -5,38 +5,43 @@
 #include <cassert>
 
 template<
-int IN_FM_DEPTH, int IN_FM_HEIGHT, int IN_FM_WIDTH,
-int OUT_FM_DEPTH, int OUT_FM_HEIGHT, int OUT_FM_WIDTH,
-int TILE_HEIGHT, int TILE_WIDTH,
-int IN_BUF_DEPTH, int IN_BUF_HEIGHT, int IN_BUF_WIDTH,
-int OUT_BUF_DEPTH, int OUT_BUF_HEIGHT, int OUT_BUF_WIDTH,
-int KERNEL_HEIGHT, int KERNEL_WIDTH, int STRIDE, int PADDING>
+int IN_FM_DEPTH, int IN_FM_HEIGHT, int IN_FM_WIDTH,  // Input
+int OUT_FM_DEPTH, int KERNEL_HEIGHT, int KERNEL_WIDTH, int STRIDE, int PADDING, // Kernel
+int OUT_BUF_DEPTH, int TILE_HEIGHT, int TILE_WIDTH // Tile shapes
+>
 void tiled_conv (
     const fm_t input_feature_map[IN_FM_DEPTH][IN_FM_HEIGHT][IN_FM_WIDTH],
     const wt_t layer_weights[OUT_FM_DEPTH][IN_FM_DEPTH][KERNEL_HEIGHT][KERNEL_WIDTH],
     const wt_t layer_bias[OUT_FM_DEPTH],
-    fm_t output_feature_map[OUT_FM_DEPTH][OUT_FM_HEIGHT][OUT_FM_WIDTH],
+    fm_t output_feature_map[OUT_FM_DEPTH][IN_FM_HEIGHT / STRIDE][IN_FM_WIDTH / STRIDE],
     const bool relu
 )
 {
-    const int MARGIN = 2 * PADDING;
-    /*
-    const int IN_BUF_H = TILE_HEIGHT + MARGIN;
-    const int IN_BUF_W = TILE_WIDTH + MARGIN;
-    static_assert(TILE_HEIGHT % STRIDE == 0, "TILE_HEIGHT must be a multiple of stride");
-    static_assert(TILE_WIDTH % STRIDE == 0, "TILE_WIDTH must be a multiple of stride");
-    const int OUT_BUF_H = TILE_HEIGHT / STRIDE;
-    */
+    static_assert(TILE_HEIGHT % STRIDE == 0, "TILE_HEIGHT must be a multiple of STRIDE");
+    static_assert(TILE_WIDTH % STRIDE == 0, "TILE_WIDTH must be a multiple of STRIDE");
+    static_assert(IN_FM_HEIGHT % STRIDE == 0, "IN_FM_HEIGHT must be a multiple of STRIDE");
+    static_assert(IN_FM_WIDTH % STRIDE == 0, "IN_FM_WIDTH must be a multiple of STRIDE");
 
+    const int MARGIN = 2 * PADDING;
+    const int IN_BUF_DEPTH = IN_FM_DEPTH;
+    const int IN_BUF_HEIGHT = TILE_HEIGHT + MARGIN;
+    const int IN_BUF_WIDTH = TILE_WIDTH + MARGIN;
+    const int OUT_BUF_HEIGHT = TILE_HEIGHT / STRIDE;
+    const int OUT_BUF_WIDTH = TILE_WIDTH / STRIDE;
+    const int OUT_FM_HEIGHT = IN_FM_HEIGHT / STRIDE;
+    const int OUT_FM_WIDTH = IN_FM_WIDTH / STRIDE;
 
     std::cout << "OUT_BUF_HEIGHT: " << OUT_BUF_HEIGHT << std::endl;
     std::cout << "TILE_HEIGHT: " << TILE_HEIGHT << std::endl;
     std::cout << "STRIDE: " << STRIDE << std::endl;
 
+    /*
     assert(IN_BUF_HEIGHT == (TILE_HEIGHT + MARGIN));
     assert(IN_BUF_WIDTH == (TILE_WIDTH + MARGIN));
     assert(OUT_BUF_HEIGHT == (TILE_HEIGHT / STRIDE));
     assert(OUT_BUF_WIDTH == (TILE_WIDTH / STRIDE));
+    */
+
 
     //--------------------------------------------------------------------------
     // Defines interface IO ports for HLS.
@@ -76,7 +81,7 @@ void tiled_conv (
             const int kernel_groups = OUT_FM_DEPTH / OUT_BUF_DEPTH;
 
             load_input_tile_block_from_DRAM
-                <IN_BUF_DEPTH, IN_BUF_HEIGHT, IN_BUF_WIDTH,
+                <IN_FM_DEPTH, IN_BUF_HEIGHT, IN_BUF_WIDTH,
                 IN_FM_DEPTH, IN_FM_HEIGHT, IN_FM_WIDTH,
                 TILE_HEIGHT, TILE_WIDTH, PADDING>
                 (conv_in_buf, input_feature_map, ti, tj);
@@ -89,7 +94,7 @@ void tiled_conv (
                     <OUT_BUF_DEPTH, IN_BUF_DEPTH, KERNEL_HEIGHT, KERNEL_WIDTH,
                     OUT_FM_DEPTH, IN_FM_DEPTH>
                     (conv_wt_buf, conv_bias_buf, layer_weights, layer_bias, tk);
-                
+
                 conv_small
                     <OUT_BUF_DEPTH, OUT_BUF_HEIGHT, OUT_BUF_WIDTH,
                     IN_BUF_DEPTH, IN_BUF_HEIGHT, IN_BUF_WIDTH,
@@ -108,3 +113,4 @@ void tiled_conv (
         }
     }
 }
+

@@ -66,11 +66,8 @@ void resnet18(
     fm_t conv1_out[64][112][112];
     tiled_conv
         <3, 224, 224,
-        64, 112, 112,
-        32, 32,
-        3, 38, 38,
-        4, 16, 16,
-        7, 7, 2, 3>
+        64, 7, 7, 2, 3,
+        64, 224, 224>
         (input, conv1_weight, conv1_bias, conv1_out, true);
     WRITE_TO_FILE(conv1_out, 64, 112, 112);
 
@@ -92,20 +89,30 @@ void resnet18(
     // block 0
     fm_t l1_out0[64][56][56];
     fm_t l1_out1[64][56][56];
-    tiled_conv
-        <64, 56, 56,
-        64, 56, 56,
-        56, 56,
-        64, 58, 58,
-        64, 56, 56,
-        3, 3, 1, 1>
-    (maxpool_out_copy, l10_c1_weight, l10_c1_bias, l1_out0, true);
-    /*
     conv<64, 56, 56,
         64, 56, 56,
         3, 3, 1, 1, true, false>(l1_out0, maxpool_out, l10_c1_weight, l10_c1_bias, nullptr);
-        */
     WRITE_TO_FILE_NAME(l1_out0, "l10_c1_out", 64, 56, 56);
+
+    // Testing tiled_conv
+    fm_t l1_out2[64][56][56];
+    tiled_conv
+        <64, 56, 56,
+        64, 3, 3, 1, 1,
+        1, 56, 56>
+    (maxpool_out, l10_c1_weight, l10_c1_bias, l1_out2, true);
+
+    for (int i = 0; i < 64; i++)
+        for (int j = 0; j < 56; j++)
+            for (int k = 0; k < 56; k++)
+            {
+                fm_t err = l1_out0[i][j][k] - l1_out2[i][j][k];
+                if (err != 0.0)
+                {
+                    printf("%d, %d, %d: %f, (%f != %f)\n", i, j, k, err, l1_out0[i][j][k], l1_out2[i][j][k]);
+                }
+            }
+
     /*
     tiled_conv
         <64, 56, 56,
