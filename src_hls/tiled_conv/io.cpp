@@ -23,18 +23,18 @@ void load_fm_tile_block_from_DRAM (
 
     const int P = PADDING;
 
+    int idx_dm = FM_HEIGHT*FM_WIDTH*depth_offset;
     INPUT_BUFFER_DEPTH:
     for(int c = 0; c < BUF_DEPTH; c++) // FM and BUF have same depth
     {
+        int idx_h = height_offset - P;
+        int idx_hm = FM_HEIGHT*(height_offset - P);
         INPUT_BUFFER_HEIGHT:
         for(int i = 0; i < BUF_HEIGHT; i++)
         {
-            INPUT_BUFFER_WIDTH:
+            int idx_w = width_offset - P;
             for(int j = 0; j < BUF_WIDTH; j++)
             {
-                int idx_d = depth_offset + c;
-                int idx_h = height_offset + i - P;
-                int idx_w = width_offset + j - P;
 
                 if ((idx_h < 0 || idx_h >= FM_HEIGHT) ||
                     (idx_w < 0 || idx_w >= FM_WIDTH))
@@ -43,12 +43,15 @@ void load_fm_tile_block_from_DRAM (
                 }
                 else
                 {
-                    int idx = idx_w + idx_h*FM_HEIGHT + idx_d*FM_HEIGHT*FM_WIDTH;
+                    int idx = idx_w + idx_hm + idx_dm;
                     in_fm_buf[c][i][j] = in_fm[idx];
                 }
-
+                idx_w++;
             }
+            idx_h++;
+            idx_hm += FM_HEIGHT;
         }
+        idx_dm += FM_WIDTH*FM_HEIGHT;
     }
 }
 
