@@ -4,7 +4,7 @@
 template<
 int OUT_BUF_DEPTH, int OUT_BUF_HEIGHT, int OUT_BUF_WIDTH,
 int IN_BUF_DEPTH, int IN_BUF_HEIGHT, int IN_BUF_WIDTH,
-int KERNEL_HEIGHT, int KERNEL_WIDTH, int STRIDE, int PADDING>
+int KERNEL_HEIGHT, int KERNEL_WIDTH, int STRIDE>
 void conv_small (
     fm_t Y_buf[OUT_BUF_DEPTH][OUT_BUF_HEIGHT][OUT_BUF_WIDTH],
     const fm_t X_buf[IN_BUF_DEPTH][IN_BUF_HEIGHT][IN_BUF_WIDTH],
@@ -37,5 +37,4 @@ OUT_FEAT:
 
                             Y_buf[of][oh][ow] += X_buf[id][i][j] * W_buf[of][id][kh][kw];
                         }
-
 }

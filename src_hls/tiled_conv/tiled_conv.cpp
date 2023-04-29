@@ -21,6 +21,7 @@ void tiled_conv (
     static_assert(TILE_WIDTH % STRIDE == 0, "TILE_WIDTH must be a multiple of STRIDE");
     static_assert(IN_FM_HEIGHT % STRIDE == 0, "IN_FM_HEIGHT must be a multiple of STRIDE");
     static_assert(IN_FM_WIDTH % STRIDE == 0, "IN_FM_WIDTH must be a multiple of STRIDE");
+    static_assert(OUT_FM_DEPTH % OUT_BUF_DEPTH == 0, "OUT_FM_DEPTH must be a multiple of OUT_BUF_DEPTH");
 
     const int MARGIN = 2 * PADDING;
     const int IN_BUF_DEPTH = IN_FM_DEPTH;
@@ -30,18 +31,7 @@ void tiled_conv (
     const int OUT_BUF_WIDTH = TILE_WIDTH / STRIDE;
     const int OUT_FM_HEIGHT = IN_FM_HEIGHT / STRIDE;
     const int OUT_FM_WIDTH = IN_FM_WIDTH / STRIDE;
-
-    std::cout << "OUT_BUF_HEIGHT: " << OUT_BUF_HEIGHT << std::endl;
-    std::cout << "TILE_HEIGHT: " << TILE_HEIGHT << std::endl;
-    std::cout << "STRIDE: " << STRIDE << std::endl;
-
-    /*
-    assert(IN_BUF_HEIGHT == (TILE_HEIGHT + MARGIN));
-    assert(IN_BUF_WIDTH == (TILE_WIDTH + MARGIN));
-    assert(OUT_BUF_HEIGHT == (TILE_HEIGHT / STRIDE));
-    assert(OUT_BUF_WIDTH == (TILE_WIDTH / STRIDE));
-    */
-
+    const int KERNEL_GRPS = OUT_FM_DEPTH / OUT_BUF_DEPTH;
 
     //--------------------------------------------------------------------------
     // Defines interface IO ports for HLS.
@@ -55,12 +45,11 @@ void tiled_conv (
 
     //--------------------------------------------------------------------------
     // On-chip buffers
-    // You should NOT modify the buffer dimensions!
     //--------------------------------------------------------------------------
-    fm_t conv_in_buf[IN_BUF_DEPTH][IN_BUF_HEIGHT][IN_BUF_WIDTH];
-    wt_t conv_wt_buf[OUT_BUF_DEPTH][IN_BUF_DEPTH][KERNEL_HEIGHT][KERNEL_WIDTH];
-    wt_t conv_bias_buf[OUT_BUF_DEPTH];
-    fm_t conv_out_buf[OUT_BUF_DEPTH][OUT_BUF_HEIGHT][OUT_BUF_WIDTH] = {0};
+    static fm_t conv_in_buf[IN_BUF_DEPTH][IN_BUF_HEIGHT][IN_BUF_WIDTH];
+    static wt_t conv_wt_buf[OUT_BUF_DEPTH][IN_BUF_DEPTH][KERNEL_HEIGHT][KERNEL_WIDTH];
+    static wt_t conv_bias_buf[OUT_BUF_DEPTH];
+    static fm_t conv_out_buf[OUT_BUF_DEPTH][OUT_BUF_HEIGHT][OUT_BUF_WIDTH];
 
     //--------------------------------------------------------------------------
     // Process each tile iteratively
@@ -75,10 +64,6 @@ void tiled_conv (
         TILE_COL:
         for(int tj = 0; tj < N_TILE_COLS; tj++)
         {
-            std::cout << "Processing Tile " << ti*N_TILE_COLS + tj + 1;
-            std::cout << "/" << N_TILE_ROWS * N_TILE_COLS << std::endl;
-
-            const int kernel_groups = OUT_FM_DEPTH / OUT_BUF_DEPTH;
 
             load_input_tile_block_from_DRAM
                 <IN_FM_DEPTH, IN_BUF_HEIGHT, IN_BUF_WIDTH,
@@ -87,7 +72,7 @@ void tiled_conv (
                 (conv_in_buf, input_feature_map, ti, tj);
 
             KERNEL_GRP:
-            for (int tk = 0; tk < kernel_groups; tk++)
+            for (int tk = 0; tk < KERNEL_GRPS; tk++)
             {
 
                 load_layer_params_from_DRAM
@@ -98,7 +83,7 @@ void tiled_conv (
                 conv_small
                     <OUT_BUF_DEPTH, OUT_BUF_HEIGHT, OUT_BUF_WIDTH,
                     IN_BUF_DEPTH, IN_BUF_HEIGHT, IN_BUF_WIDTH,
-                    KERNEL_HEIGHT, KERNEL_WIDTH, STRIDE, PADDING>
+                    KERNEL_HEIGHT, KERNEL_WIDTH, STRIDE>
                     (conv_out_buf, conv_in_buf, conv_wt_buf, conv_bias_buf);
 
                 store_output_tile_to_DRAM
@@ -107,9 +92,6 @@ void tiled_conv (
                     (output_feature_map, conv_out_buf, ti, tj, tk, relu);
 
             }
-
-
-
         }
     }
 }
