@@ -67,10 +67,8 @@ void tiled_conv (
         {
 
             load_fm_tile_block_from_DRAM
-                <IN_BUF_DEPTH, IN_BUF_HEIGHT, IN_BUF_WIDTH,
-                IN_FM_DEPTH, IN_FM_HEIGHT, IN_FM_WIDTH,
-                TILE_HEIGHT, TILE_WIDTH, PADDING>
-                (conv_in_buf, input_feature_map, ti, tj);
+                <IN_BUF_DEPTH, TILE_HEIGHT, TILE_WIDTH, PADDING>
+                (conv_in_buf, input_feature_map[0][0], IN_FM_HEIGHT, IN_FM_WIDTH, ti, tj);
 
             KERNEL_GRP:
             for (int tk = 0; tk < KERNEL_GRPS; tk++)

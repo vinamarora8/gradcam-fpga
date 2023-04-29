@@ -1,18 +1,21 @@
 #pragma once
 #include "../util.h"
 
-template<int BUF_DEPTH, int BUF_HEIGHT, int BUF_WIDTH,
-         int FM_DEPTH, int FM_HEIGHT, int FM_WIDTH,
-         int TILE_HEIGHT, int TILE_WIDTH, int PADDING>
+template<int TILE_DEPTH, int TILE_HEIGHT, int TILE_WIDTH, int PADDING>
 void load_fm_tile_block_from_DRAM (
-    fm_t in_fm_buf[BUF_DEPTH][BUF_HEIGHT][BUF_WIDTH],
-    const fm_t in_fm[FM_DEPTH][FM_HEIGHT][FM_WIDTH],
+    fm_t in_fm_buf[TILE_DEPTH][TILE_HEIGHT + 2*PADDING][TILE_WIDTH + 2*PADDING],
+    const fm_t in_fm[],
+    const int fm_height, const int fm_width,
     const int  ti,
     const int  tj
 )
 {
     const int height_offset = ti * TILE_HEIGHT;
     const int width_offset  = tj * TILE_WIDTH;
+
+    const int BUF_DEPTH = TILE_DEPTH;
+    const int BUF_HEIGHT = TILE_HEIGHT + 2*PADDING;
+    const int BUF_WIDTH = TILE_WIDTH + 2*PADDING;
 
     const int P = PADDING;
 
@@ -25,25 +28,18 @@ void load_fm_tile_block_from_DRAM (
             INPUT_BUFFER_WIDTH:
             for(int j = 0; j < BUF_WIDTH; j++)
             {
-                // TODO: Handle border features here
-                //
-                // Hint: Either load 0 or input feature into
-                //       the buffer based on border conditions
-                //in_fm_buf[f][i][j] = 0; // Just a placeholder
-
                 int idx_h = height_offset + i - P;
                 int idx_w = width_offset + j - P;
 
-                if ((idx_h < 0 || idx_h >= FM_HEIGHT) ||
-                    (idx_w < 0 || idx_w >= FM_WIDTH))
+                if ((idx_h < 0 || idx_h >= fm_height) ||
+                    (idx_w < 0 || idx_w >= fm_width))
                 {
                     in_fm_buf[c][i][j] = (fm_t) 0;
                 }
                 else
                 {
-                    //int dram_idx = idx_w + idx_h*FM_WIDTH + c*FM_WIDTH*FM_HEIGHT;
-                    //in_fm_buf[c][i][j] = dram[dram_idx];
-                    in_fm_buf[c][i][j] = in_fm[c][idx_h][idx_w];
+                    int idx = idx_w + idx_h*fm_height + c*fm_height*fm_width;
+                    in_fm_buf[c][i][j] = in_fm[idx];
                 }
 
             }
@@ -114,14 +110,10 @@ void store_output_tile_to_DRAM (
             OUTPUT_BUFFER_WIDTH:
             for(int j = 0; j < OUT_BUF_WIDTH; j++)
             {
-                //int dram_idx = (width_offset + j) + (height_offset + i)*OUT_FM_WIDTH + (depth_offset + f)*OUT_FM_WIDTH*OUT_FM_HEIGHT;
-                //std::cout << f << ", " << i << ", " << j << std::endl;
-
                 // ReLU in-place
                 if(relu & (out_fm_buf[f][i][j] < (fm_t) 0))
                 {
                     out_fm[depth_offset + f][height_offset + i][width_offset + j] = (fm_t) 0;
-                    //out_fm[dram_idx] = (fm_t) 0;
                 }
                 else
                 {
