@@ -12,21 +12,22 @@ int IN_BUF_DEPTH, int IN_BUF_HEIGHT, int IN_BUF_WIDTH,
 int OUT_BUF_DEPTH, int OUT_BUF_HEIGHT, int OUT_BUF_WIDTH,
 int KERNEL_HEIGHT, int KERNEL_WIDTH, int STRIDE, int PADDING>
 void tiled_conv (
-    fm_t input_feature_map[IN_FM_DEPTH][IN_FM_HEIGHT][IN_FM_WIDTH],
-    wt_t layer_weights[OUT_FM_DEPTH][IN_FM_DEPTH][KERNEL_HEIGHT][KERNEL_WIDTH],
-    wt_t layer_bias[OUT_FM_DEPTH],
+    const fm_t input_feature_map[IN_FM_DEPTH][IN_FM_HEIGHT][IN_FM_WIDTH],
+    const wt_t layer_weights[OUT_FM_DEPTH][IN_FM_DEPTH][KERNEL_HEIGHT][KERNEL_WIDTH],
+    const wt_t layer_bias[OUT_FM_DEPTH],
     fm_t output_feature_map[OUT_FM_DEPTH][OUT_FM_HEIGHT][OUT_FM_WIDTH],
-    bool relu
+    const bool relu
 )
 {
     const int MARGIN = 2 * PADDING;
     /*
     const int IN_BUF_H = TILE_HEIGHT + MARGIN;
     const int IN_BUF_W = TILE_WIDTH + MARGIN;
-    assert(TILE_HEIGHT % STRIDE == 0);
-    assert(TILE_WIDTH % STRIDE == 0);
+    static_assert(TILE_HEIGHT % STRIDE == 0, "TILE_HEIGHT must be a multiple of stride");
+    static_assert(TILE_WIDTH % STRIDE == 0, "TILE_WIDTH must be a multiple of stride");
     const int OUT_BUF_H = TILE_HEIGHT / STRIDE;
     */
+
 
     std::cout << "OUT_BUF_HEIGHT: " << OUT_BUF_HEIGHT << std::endl;
     std::cout << "TILE_HEIGHT: " << TILE_HEIGHT << std::endl;

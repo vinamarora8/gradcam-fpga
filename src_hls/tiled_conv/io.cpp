@@ -6,9 +6,9 @@ template<int IN_BUF_DEPTH, int IN_BUF_HEIGHT, int IN_BUF_WIDTH,
          int TILE_HEIGHT, int TILE_WIDTH, int PADDING>
 void load_input_tile_block_from_DRAM (
     fm_t in_fm_buf[IN_BUF_DEPTH][IN_BUF_HEIGHT][IN_BUF_WIDTH],
-    fm_t in_fm[IN_FM_DEPTH][IN_FM_HEIGHT][IN_FM_WIDTH],
-    int  ti,
-    int  tj
+    const fm_t in_fm[IN_FM_DEPTH][IN_FM_HEIGHT][IN_FM_WIDTH],
+    const int  ti,
+    const int  tj
 )
 {
     const int height_offset = ti * TILE_HEIGHT;
@@ -57,9 +57,9 @@ template<int OUT_BUF_DEPTH, int IN_BUF_DEPTH, int KERNEL_HEIGHT, int KERNEL_WIDT
 void load_layer_params_from_DRAM (
     wt_t weight_buf[OUT_BUF_DEPTH][IN_BUF_DEPTH][KERNEL_HEIGHT][KERNEL_WIDTH],
     wt_t bias_buf[OUT_BUF_DEPTH],
-    wt_t weights[OUT_FM_DEPTH][IN_FM_DEPTH][KERNEL_HEIGHT][KERNEL_WIDTH],
-    wt_t bias[OUT_FM_DEPTH],
-    int  kernel_group
+    const wt_t weights[OUT_FM_DEPTH][IN_FM_DEPTH][KERNEL_HEIGHT][KERNEL_WIDTH],
+    const wt_t bias[OUT_FM_DEPTH],
+    const int kernel_group
 )
 {
     const int kernel_offset  = kernel_group * OUT_BUF_DEPTH;
@@ -94,11 +94,11 @@ template<int OUT_BUF_DEPTH, int OUT_BUF_HEIGHT, int OUT_BUF_WIDTH,
          int OUT_FM_DEPTH, int OUT_FM_HEIGHT, int OUT_FM_WIDTH>
 void store_output_tile_to_DRAM (
     fm_t out_fm[OUT_FM_DEPTH][OUT_FM_HEIGHT][OUT_FM_WIDTH],
-    fm_t out_fm_buf[OUT_BUF_DEPTH][OUT_BUF_HEIGHT][OUT_BUF_WIDTH],
-    int  ti,
-    int  tj,
-    int  kernel_group,
-    bool relu
+    const fm_t out_fm_buf[OUT_BUF_DEPTH][OUT_BUF_HEIGHT][OUT_BUF_WIDTH],
+    const int  ti,
+    const int  tj,
+    const int  kernel_group,
+    const bool relu
 )
 {
     const int depth_offset  = kernel_group * OUT_BUF_DEPTH;

@@ -7,9 +7,9 @@ int IN_BUF_DEPTH, int IN_BUF_HEIGHT, int IN_BUF_WIDTH,
 int KERNEL_HEIGHT, int KERNEL_WIDTH, int STRIDE, int PADDING>
 void conv_small (
     fm_t Y_buf[OUT_BUF_DEPTH][OUT_BUF_HEIGHT][OUT_BUF_WIDTH],
-    fm_t X_buf[IN_BUF_DEPTH][IN_BUF_HEIGHT][IN_BUF_WIDTH],
-    wt_t W_buf[OUT_BUF_DEPTH][IN_BUF_DEPTH][KERNEL_HEIGHT][KERNEL_WIDTH],
-    wt_t B_buf[OUT_BUF_DEPTH]
+    const fm_t X_buf[IN_BUF_DEPTH][IN_BUF_HEIGHT][IN_BUF_WIDTH],
+    const wt_t W_buf[OUT_BUF_DEPTH][IN_BUF_DEPTH][KERNEL_HEIGHT][KERNEL_WIDTH],
+    const wt_t B_buf[OUT_BUF_DEPTH]
 )
 {
     const int S = STRIDE;
