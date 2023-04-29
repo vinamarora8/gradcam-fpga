@@ -100,9 +100,11 @@ void resnet18(
         64, 56, 56,
         3, 3, 1, 1>
     (maxpool_out_copy, l10_c1_weight, l10_c1_bias, l1_out0, true);
+    /*
     conv<64, 56, 56,
         64, 56, 56,
         3, 3, 1, 1, true, false>(l1_out0, maxpool_out, l10_c1_weight, l10_c1_bias, nullptr);
+        */
     WRITE_TO_FILE_NAME(l1_out0, "l10_c1_out", 64, 56, 56);
     /*
     tiled_conv
