@@ -1,3 +1,5 @@
+#pragma once
+
 float *read_bin_file(const std::string filepath, const std::vector<int> dims)
 {
     uint64_t size = 1;
@@ -114,3 +116,30 @@ void load_fp_and_fixp_vals(float fp_arr[N], fixp_t fixp_arr[N], const std::strin
     }
 }
 
+
+#ifdef CSIM_DEBUG
+#   define WRITE_TO_FILE_ENABLED
+#endif
+
+#ifdef WRITE_TO_FILE_ENABLED
+std::string root_dir = "out/";
+#define WRITE_TO_FILE(var, dim0, dim1, dim2) \
+    { \
+        std::vector<int> dims(3); \
+        dims[0] = dim0; \
+        dims[1] = dim1; \
+        dims[2] = dim2; \
+        write_to_file(root_dir + VAR_NAME(var) + ".bin", dims, var); \
+    }
+#define WRITE_TO_FILE_NAME(var, name, dim0, dim1, dim2) \
+    { \
+        std::vector<int> dims(3); \
+        dims[0] = dim0; \
+        dims[1] = dim1; \
+        dims[2] = dim2; \
+        write_to_file(root_dir + name + ".bin", dims, var); \
+    }
+#else
+#define WRITE_TO_FILE(var, dim0, dim1, dim2)
+#define WRITE_TO_FILE_NAME(var, name, dim0, dim1, dim2)
+#endif

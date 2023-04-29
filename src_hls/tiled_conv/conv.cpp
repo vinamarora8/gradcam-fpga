@@ -1,7 +1,8 @@
 #pragma once
 #include "../util.h"
 
-template<int OUT_BUF_DEPTH, int OUT_BUF_HEIGHT, int OUT_BUF_WIDTH,
+template<
+int OUT_BUF_DEPTH, int OUT_BUF_HEIGHT, int OUT_BUF_WIDTH,
 int IN_BUF_DEPTH, int IN_BUF_HEIGHT, int IN_BUF_WIDTH,
 int KERNEL_HEIGHT, int KERNEL_WIDTH, int STRIDE, int PADDING>
 void conv_small (
@@ -21,13 +22,15 @@ OUT_FEAT:
             for (int ow = 0; ow < OUT_BUF_WIDTH; ow++)
             IN_FEAT:
                 for (int id = 0; id < IN_BUF_DEPTH; id++)
-                IN_ROW:
+              IN_ROW:
                     for (int kh = 0; kh < KERNEL_HEIGHT; kh++)
                     IN_COL:
                         for (int kw = 0; kw < KERNEL_WIDTH; kw++)
                         {
                             if (id == 0 && kh == 0 && kw == 0)
+                            {
                                 Y_buf[of][oh][ow] = B_buf[of];
+                            }
 
                             int i = S*oh + kh;
                             int j = S*ow + kw;

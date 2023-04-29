@@ -4,33 +4,7 @@
 #include "avg_pool.h"
 #include "linear_fc.h"
 #include "tiled_conv/tiled_conv.cpp"
-
-#ifdef CSIM_DEBUG
-#   define WRITE_TO_FILE_ENABLED
-#endif
-
-#ifdef WRITE_TO_FILE_ENABLED
-std::string root_dir = "out/";
-#define WRITE_TO_FILE(var, dim0, dim1, dim2) \
-    { \
-        std::vector<int> dims(3); \
-        dims[0] = dim0; \
-        dims[1] = dim1; \
-        dims[2] = dim2; \
-        write_to_file(root_dir + VAR_NAME(var) + ".bin", dims, var); \
-    }
-#define WRITE_TO_FILE_NAME(var, name, dim0, dim1, dim2) \
-    { \
-        std::vector<int> dims(3); \
-        dims[0] = dim0; \
-        dims[1] = dim1; \
-        dims[2] = dim2; \
-        write_to_file(root_dir + name + ".bin", dims, var); \
-    }
-#else
-#define WRITE_TO_FILE(var, dim0, dim1, dim2)
-#define WRITE_TO_FILE_NAME(var, name, dim0, dim1, dim2)
-#endif
+#include "sim_util.h"
 
 void resnet18(
         fm_t input[3][224][224],
@@ -97,7 +71,7 @@ void resnet18(
         3, 38, 38,
         4, 16, 16,
         7, 7, 2, 3>
-        (input[0][0], conv1_weight, conv1_bias, conv1_out[0][0], true);
+        (input, conv1_weight, conv1_bias, conv1_out, true);
     WRITE_TO_FILE(conv1_out, 64, 112, 112);
 
 
@@ -108,17 +82,49 @@ void resnet18(
             3, 3, 2, 1>(maxpool_out, conv1_out);
     WRITE_TO_FILE(maxpool_out, 64, 56, 56);
 
+    fm_t maxpool_out_copy[64][56][56];
+    for (int i = 0; i < 64*56*56; i++)
+    {
+        maxpool_out_copy[0][0][i] = maxpool_out[0][0][i];
+    }
+
     // layer 1 
     // block 0
     fm_t l1_out0[64][56][56];
     fm_t l1_out1[64][56][56];
+    tiled_conv
+        <64, 56, 56,
+        64, 56, 56,
+        56, 56,
+        64, 58, 58,
+        64, 56, 56,
+        3, 3, 1, 1>
+    (maxpool_out_copy, l10_c1_weight, l10_c1_bias, l1_out0, true);
     conv<64, 56, 56,
         64, 56, 56,
         3, 3, 1, 1, true, false>(l1_out0, maxpool_out, l10_c1_weight, l10_c1_bias, nullptr);
+    WRITE_TO_FILE_NAME(l1_out0, "l10_c1_out", 64, 56, 56);
+    /*
+    tiled_conv
+        <64, 56, 56,
+        64, 56, 56,
+        56, 56,
+        64, 58, 58,
+        64, 56, 56,
+        3, 3, 1, 1>
+    (l1_out0, l10_c2_weight, l10_c2_bias, l1_out1, false);
+    for (int i = 0; i < 64*56*56; i++)
+    {
+        l1_out1[0][0][i] += maxpool_out[0][0][i];
+        if (l1_out1[0][0][i] < 0)
+        {
+            l1_out1[0][0][i] = (fm_t) 0;
+        }
+    }
+    */
     conv<64, 56, 56,
         64, 56, 56,
         3, 3, 1, 1, true, true>(l1_out1, l1_out0, l10_c2_weight, l10_c2_bias, maxpool_out);
-    WRITE_TO_FILE_NAME(l1_out0, "l10_c1_out", 64, 56, 56);
     WRITE_TO_FILE_NAME(l1_out1, "l10_c2_out", 64, 56, 56);
     // block 1
     conv<64, 56, 56,
