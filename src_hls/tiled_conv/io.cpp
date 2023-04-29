@@ -43,7 +43,7 @@ void load_fm_tile_block_from_DRAM (
                 }
                 else
                 {
-                    int idx = idx_w + idx_h*FM_HEIGHT + c*FM_HEIGHT*FM_WIDTH;
+                    int idx = idx_w + idx_h*FM_HEIGHT + idx_d*FM_HEIGHT*FM_WIDTH;
                     in_fm_buf[c][i][j] = in_fm[idx];
                 }
 

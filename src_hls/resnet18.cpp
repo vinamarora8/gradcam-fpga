@@ -88,9 +88,6 @@ void resnet18(
     // layer 1 
     // block 0
     fm_t l1_out0[64][56][56];
-    fm_t l1_out1[64][56][56];
-    fm_t l1_out2[64][56][56];
-
     // Testing tiled_conv
     tiled_conv
         <64, 64, 3, 3, 1, 1,
@@ -99,47 +96,50 @@ void resnet18(
     tiled_conv
         <64, 64, 3, 3, 1, 1,
         56, 56, 64, 7, 7>
-    (l1_out2, l1_out0, l10_c2_weight, l10_c2_bias, false);
-    add_residue<64, 56, 56>(l1_out2, maxpool_out);
+    (maxpool_out, l1_out0, l10_c2_weight, l10_c2_bias, true, true);
     WRITE_TO_FILE_NAME(l1_out0, "l10_c1_out", 64, 56, 56);
-    WRITE_TO_FILE_NAME(l1_out2, "l10_c2_out", 64, 56, 56);
+    WRITE_TO_FILE_NAME(maxpool_out, "l10_c2_out", 64, 56, 56);
     // block 1
     tiled_conv
         <64, 64, 3, 3, 1, 1,
         56, 56, 64, 7, 7>
-    (l1_out0, l1_out2, l11_c1_weight, l11_c1_bias, true);
+    (l1_out0, maxpool_out, l11_c1_weight, l11_c1_bias, true);
     tiled_conv
         <64, 64, 3, 3, 1, 1,
         56, 56, 64, 7, 7>
-    (l1_out1, l1_out0, l11_c2_weight, l11_c2_bias, false);
-    add_residue<64, 56, 56>(l1_out1, l1_out2);
+    (maxpool_out, l1_out0, l11_c2_weight, l11_c2_bias, true, true);
     WRITE_TO_FILE_NAME(l1_out0, "l11_c1_out", 64, 56, 56);
-    WRITE_TO_FILE_NAME(l1_out1, "l11_c2_out", 64, 56, 56);
+    WRITE_TO_FILE_NAME(maxpool_out, "l11_c2_out", 64, 56, 56);
 
     // layer 2
     // downsample
     fm_t l2_out0[128][28][28];
     fm_t l2_out1[128][28][28];
-    conv<64, 56, 56,
-        128, 28, 28,
-        1, 1, 2, 0, true, false, false>(l2_out1, l1_out1, l2_ds_weight, l2_ds_bias, nullptr);
+    tiled_conv
+        <128, 64, 1, 1, 2, 0,
+        56, 56, 64, 14, 14>
+        (l2_out1, maxpool_out, l2_ds_weight, l2_ds_bias, false);
     WRITE_TO_FILE_NAME(l2_out1, "l2_ds_out", 128, 28, 28);
     // block 0
-    conv<64, 56, 56,
-        128, 28, 28,
-        3, 3, 2, 1, true, false>(l2_out0, l1_out1, l20_c1_weight, l20_c1_bias, nullptr);
-    conv<128, 28, 28,
-        128, 28, 28,
-        3, 3, 1, 1, true, true>(l2_out1, l2_out0, l20_c2_weight, l20_c2_bias, l2_out1);
+    tiled_conv
+        <128, 64, 3, 3, 2, 1,
+        56, 56, 64, 14, 14>
+        (l2_out0, maxpool_out, l20_c1_weight, l20_c1_bias, true);
+    tiled_conv
+        <128, 128, 3, 3, 1, 1,
+        28, 28, 128, 7, 7>
+        (l2_out1, l2_out0, l20_c2_weight, l20_c2_bias, true, true);
     WRITE_TO_FILE_NAME(l2_out0, "l20_c1_out", 128, 28, 28);
     WRITE_TO_FILE_NAME(l2_out1, "l20_c2_out", 128, 28, 28);
     // block 1
-    conv<128, 28, 28,
-        128, 28, 28,
-        3, 3, 1, 1, true, false>(l2_out0, l2_out1, l21_c1_weight, l21_c1_bias, nullptr);
-    conv<128, 28, 28,
-        128, 28, 28,
-        3, 3, 1, 1, true, true>(l2_out1, l2_out0, l21_c2_weight, l21_c2_bias, l2_out1);
+    tiled_conv
+        <128, 128, 3, 3, 1, 1,
+        28, 28, 128, 7, 7>
+        (l2_out0, l2_out1, l21_c1_weight, l21_c1_bias, true);
+    tiled_conv
+        <128, 128, 3, 3, 1, 1,
+        28, 28, 128, 7, 7>
+        (l2_out1, l2_out0, l21_c2_weight, l21_c2_bias, true, true);
     WRITE_TO_FILE_NAME(l2_out0, "l21_c1_out", 128, 28, 28);
     WRITE_TO_FILE_NAME(l2_out1, "l21_c2_out", 128, 28, 28);
 
