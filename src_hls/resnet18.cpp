@@ -5,6 +5,7 @@
 #include "linear_fc.h"
 #include "tiled_conv/tiled_conv.cpp"
 #include "sim_util.h"
+#include "residual.cpp"
 
 void resnet18(
         fm_t input[3][224][224],
@@ -65,9 +66,8 @@ void resnet18(
     // conv1
     fm_t conv1_out[64][112][112];
     tiled_conv
-        <3, 224, 224,
-        64, 7, 7, 2, 3,
-        64, 32, 32>
+        <64, 3, 7, 7, 2, 3,
+        224, 224, 64, 32, 32>
         (conv1_out, input, conv1_weight, conv1_bias, true);
     WRITE_TO_FILE(conv1_out, 64, 112, 112);
 
@@ -91,15 +91,15 @@ void resnet18(
     fm_t l1_out1[64][56][56];
 
     // Testing tiled_conv
-    fm_t l1_out2[64][56][56];
     tiled_conv
-        <64, 56, 56,
-        64, 3, 3, 1, 1,
-        64, 7, 7>
+        <64, 64, 3, 3, 1, 1,
+        56, 56, 64, 7, 7>
     (l1_out0, maxpool_out, l10_c1_weight, l10_c1_bias, true);
-    conv<64, 56, 56,
-        64, 56, 56,
-        3, 3, 1, 1, true, true>(l1_out1, l1_out0, l10_c2_weight, l10_c2_bias, maxpool_out);
+    tiled_conv
+        <64, 64, 3, 3, 1, 1,
+        56, 56, 64, 7, 7>
+    (l1_out1, l1_out0, l10_c2_weight, l10_c2_bias, false);
+    add_residue<64, 56, 56>(l1_out1, maxpool_out);
     WRITE_TO_FILE_NAME(l1_out0, "l10_c1_out", 64, 56, 56);
     WRITE_TO_FILE_NAME(l1_out1, "l10_c2_out", 64, 56, 56);
     // block 1

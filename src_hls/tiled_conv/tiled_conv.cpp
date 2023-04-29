@@ -5,8 +5,8 @@
 #include <cassert>
 
 template<
-int IN_FM_DEPTH, int IN_FM_HEIGHT, int IN_FM_WIDTH,  // Input
-int OUT_FM_DEPTH, int KERNEL_HEIGHT, int KERNEL_WIDTH, int STRIDE, int PADDING, // Kernel
+int OUT_FM_DEPTH, int IN_FM_DEPTH, int KERNEL_HEIGHT, int KERNEL_WIDTH, int STRIDE, int PADDING, // Kernel
+int IN_FM_HEIGHT, int IN_FM_WIDTH,  // Input
 int OUT_BUF_DEPTH, int TILE_HEIGHT, int TILE_WIDTH // Tile shapes
 >
 void tiled_conv (
@@ -22,6 +22,8 @@ void tiled_conv (
     static_assert(IN_FM_HEIGHT % STRIDE == 0, "IN_FM_HEIGHT must be a multiple of STRIDE");
     static_assert(IN_FM_WIDTH % STRIDE == 0, "IN_FM_WIDTH must be a multiple of STRIDE");
     static_assert(OUT_FM_DEPTH % OUT_BUF_DEPTH == 0, "OUT_FM_DEPTH must be a multiple of OUT_BUF_DEPTH");
+    static_assert(IN_FM_HEIGHT % TILE_HEIGHT == 0, "IN_FM_HEIGHT must be a multiple of TILE_HEIGHT");
+    static_assert(IN_FM_WIDTH % TILE_WIDTH == 0, "IN_FM_WIDTH must be a multiple of TILE_WIDTH");
 
     const int MARGIN = 2 * PADDING;
     const int IN_BUF_DEPTH = IN_FM_DEPTH;
@@ -31,7 +33,10 @@ void tiled_conv (
     const int OUT_BUF_WIDTH = TILE_WIDTH / STRIDE;
     const int OUT_FM_HEIGHT = IN_FM_HEIGHT / STRIDE;
     const int OUT_FM_WIDTH = IN_FM_WIDTH / STRIDE;
+
     const int KERNEL_GRPS = OUT_FM_DEPTH / OUT_BUF_DEPTH;
+    const int N_TILE_ROWS = IN_FM_HEIGHT / TILE_HEIGHT;
+    const int N_TILE_COLS = IN_FM_WIDTH  / TILE_WIDTH;
 
     //--------------------------------------------------------------------------
     // Defines interface IO ports for HLS.
@@ -40,7 +45,6 @@ void tiled_conv (
     #pragma HLS INTERFACE m_axi depth=1  port=layer_weights       bundle=wt
     #pragma HLS INTERFACE m_axi depth=1  port=layer_bias          bundle=wt
     #pragma HLS INTERFACE m_axi depth=1  port=output_feature_map  bundle=fm
-
     #pragma HLS INTERFACE s_axilite register	port=return
 
     //--------------------------------------------------------------------------
@@ -54,9 +58,6 @@ void tiled_conv (
     //--------------------------------------------------------------------------
     // Process each tile iteratively
     //--------------------------------------------------------------------------
-    
-    const int N_TILE_ROWS = IN_FM_HEIGHT / TILE_HEIGHT;
-    const int N_TILE_COLS = IN_FM_WIDTH  / TILE_WIDTH;
 
     TILE_ROW:
     for(int ti = 0; ti < N_TILE_ROWS; ti++)
@@ -66,7 +67,7 @@ void tiled_conv (
         {
 
             load_input_tile_block_from_DRAM
-                <IN_FM_DEPTH, IN_BUF_HEIGHT, IN_BUF_WIDTH,
+                <IN_BUF_DEPTH, IN_BUF_HEIGHT, IN_BUF_WIDTH,
                 IN_FM_DEPTH, IN_FM_HEIGHT, IN_FM_WIDTH,
                 TILE_HEIGHT, TILE_WIDTH, PADDING>
                 (conv_in_buf, input_feature_map, ti, tj);
