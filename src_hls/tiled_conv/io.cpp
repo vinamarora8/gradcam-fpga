@@ -1,12 +1,12 @@
 #pragma once
 #include "../util.h"
 
-template<int IN_BUF_DEPTH, int IN_BUF_HEIGHT, int IN_BUF_WIDTH,
-         int IN_FM_DEPTH, int IN_FM_HEIGHT, int IN_FM_WIDTH,
+template<int BUF_DEPTH, int BUF_HEIGHT, int BUF_WIDTH,
+         int FM_DEPTH, int FM_HEIGHT, int FM_WIDTH,
          int TILE_HEIGHT, int TILE_WIDTH, int PADDING>
-void load_input_tile_block_from_DRAM (
-    fm_t in_fm_buf[IN_BUF_DEPTH][IN_BUF_HEIGHT][IN_BUF_WIDTH],
-    const fm_t in_fm[IN_FM_DEPTH][IN_FM_HEIGHT][IN_FM_WIDTH],
+void load_fm_tile_block_from_DRAM (
+    fm_t in_fm_buf[BUF_DEPTH][BUF_HEIGHT][BUF_WIDTH],
+    const fm_t in_fm[FM_DEPTH][FM_HEIGHT][FM_WIDTH],
     const int  ti,
     const int  tj
 )
@@ -17,13 +17,13 @@ void load_input_tile_block_from_DRAM (
     const int P = PADDING;
 
     INPUT_BUFFER_DEPTH:
-    for(int c = 0; c < IN_BUF_DEPTH; c++) // FM and BUF have same depth
+    for(int c = 0; c < BUF_DEPTH; c++) // FM and BUF have same depth
     {
         INPUT_BUFFER_HEIGHT:
-        for(int i = 0; i < IN_BUF_HEIGHT; i++)
+        for(int i = 0; i < BUF_HEIGHT; i++)
         {
             INPUT_BUFFER_WIDTH:
-            for(int j = 0; j < IN_BUF_WIDTH; j++)
+            for(int j = 0; j < BUF_WIDTH; j++)
             {
                 // TODO: Handle border features here
                 //
@@ -34,14 +34,14 @@ void load_input_tile_block_from_DRAM (
                 int idx_h = height_offset + i - P;
                 int idx_w = width_offset + j - P;
 
-                if ((idx_h < 0 || idx_h >= IN_FM_HEIGHT) ||
-                    (idx_w < 0 || idx_w >= IN_FM_WIDTH))
+                if ((idx_h < 0 || idx_h >= FM_HEIGHT) ||
+                    (idx_w < 0 || idx_w >= FM_WIDTH))
                 {
                     in_fm_buf[c][i][j] = (fm_t) 0;
                 }
                 else
                 {
-                    //int dram_idx = idx_w + idx_h*IN_FM_WIDTH + c*IN_FM_WIDTH*IN_FM_HEIGHT;
+                    //int dram_idx = idx_w + idx_h*FM_WIDTH + c*FM_WIDTH*FM_HEIGHT;
                     //in_fm_buf[c][i][j] = dram[dram_idx];
                     in_fm_buf[c][i][j] = in_fm[c][idx_h][idx_w];
                 }

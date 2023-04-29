@@ -66,7 +66,7 @@ void tiled_conv (
         for(int tj = 0; tj < N_TILE_COLS; tj++)
         {
 
-            load_input_tile_block_from_DRAM
+            load_fm_tile_block_from_DRAM
                 <IN_BUF_DEPTH, IN_BUF_HEIGHT, IN_BUF_WIDTH,
                 IN_FM_DEPTH, IN_FM_HEIGHT, IN_FM_WIDTH,
                 TILE_HEIGHT, TILE_WIDTH, PADDING>
