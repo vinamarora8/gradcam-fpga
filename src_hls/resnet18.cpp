@@ -68,7 +68,7 @@ void resnet18(
         <3, 224, 224,
         64, 7, 7, 2, 3,
         64, 32, 32>
-        (input, conv1_weight, conv1_bias, conv1_out, true);
+        (conv1_out, input, conv1_weight, conv1_bias, true);
     WRITE_TO_FILE(conv1_out, 64, 112, 112);
 
 
@@ -96,7 +96,7 @@ void resnet18(
         <64, 56, 56,
         64, 3, 3, 1, 1,
         64, 7, 7>
-    (maxpool_out, l10_c1_weight, l10_c1_bias, l1_out0, true);
+    (l1_out0, maxpool_out, l10_c1_weight, l10_c1_bias, true);
     conv<64, 56, 56,
         64, 56, 56,
         3, 3, 1, 1, true, true>(l1_out1, l1_out0, l10_c2_weight, l10_c2_bias, maxpool_out);

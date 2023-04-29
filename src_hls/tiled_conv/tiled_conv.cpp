@@ -10,10 +10,10 @@ int OUT_FM_DEPTH, int KERNEL_HEIGHT, int KERNEL_WIDTH, int STRIDE, int PADDING, 
 int OUT_BUF_DEPTH, int TILE_HEIGHT, int TILE_WIDTH // Tile shapes
 >
 void tiled_conv (
+    fm_t output_feature_map[OUT_FM_DEPTH][IN_FM_HEIGHT / STRIDE][IN_FM_WIDTH / STRIDE],
     const fm_t input_feature_map[IN_FM_DEPTH][IN_FM_HEIGHT][IN_FM_WIDTH],
     const wt_t layer_weights[OUT_FM_DEPTH][IN_FM_DEPTH][KERNEL_HEIGHT][KERNEL_WIDTH],
     const wt_t layer_bias[OUT_FM_DEPTH],
-    fm_t output_feature_map[OUT_FM_DEPTH][IN_FM_HEIGHT / STRIDE][IN_FM_WIDTH / STRIDE],
     const bool relu
 )
 {
