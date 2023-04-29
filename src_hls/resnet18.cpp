@@ -147,26 +147,31 @@ void resnet18(
     fm_t l3_out0[256][14][14];
     fm_t l3_out1[256][14][14];
     // downsample
-    conv<128, 28, 28,
-        256, 14, 14,
-        1, 1, 2, 0, true, false, false>(l3_out1, l2_out1, l3_ds_weight, l3_ds_bias, nullptr);
+    tiled_conv
+        <256, 128, 1, 1, 2, 0,
+        28, 28, 64, 14, 14>
+        (l3_out1, l2_out1, l3_ds_weight, l3_ds_bias, false);
     WRITE_TO_FILE_NAME(l3_out1, "l3_ds_out", 256, 14, 14);
     // block 0
-    conv<128, 28, 28,
-        256, 14, 14,
-        3, 3, 2, 1, true, false>(l3_out0, l2_out1, l30_c1_weight, l30_c1_bias, nullptr);
-    conv<256, 14, 14,
-        256, 14, 14,
-        3, 3, 1, 1, true, true>(l3_out1, l3_out0, l30_c2_weight, l30_c2_bias, l3_out1);
+    tiled_conv
+        <256, 128, 3, 3, 2, 1,
+        28, 28, 64, 14, 14>
+        (l3_out0, l2_out1, l30_c1_weight, l30_c1_bias, true);
+    tiled_conv
+        <256, 256, 3, 3, 1, 1,
+        14, 14, 64, 7, 7>
+        (l3_out1, l3_out0, l30_c2_weight, l30_c2_bias, true, true);
     WRITE_TO_FILE_NAME(l3_out0, "l30_c1_out", 256, 14, 14);
     WRITE_TO_FILE_NAME(l3_out1, "l30_c2_out", 256, 14, 14);
     // block 1
-    conv<256, 14, 14,
-        256, 14, 14,
-        3, 3, 1, 1, true, false>(l3_out0, l3_out1, l31_c1_weight, l31_c1_bias, nullptr);
-    conv<256, 14, 14,
-        256, 14, 14,
-        3, 3, 1, 1, true, true>(l3_out1, l3_out0, l31_c2_weight, l31_c2_bias, l3_out1);
+    tiled_conv
+        <256, 256, 3, 3, 1, 1,
+        14, 14, 64, 7, 7>
+        (l3_out0, l3_out1, l31_c1_weight, l31_c1_bias, true);
+    tiled_conv
+        <256, 256, 3, 3, 1, 1,
+        14, 14, 64, 7, 7>
+        (l3_out1, l3_out0, l31_c2_weight, l31_c2_bias, true, true);
     WRITE_TO_FILE_NAME(l3_out0, "l31_c1_out", 256, 14, 14);
     WRITE_TO_FILE_NAME(l3_out1, "l31_c2_out", 256, 14, 14);
 
