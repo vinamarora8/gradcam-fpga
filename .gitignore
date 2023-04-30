@@ -21,3 +21,5 @@ src_hls/sim
 src_hls/out
 
 .vscode
+
+proj/
