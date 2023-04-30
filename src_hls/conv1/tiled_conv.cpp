@@ -49,11 +49,7 @@ void tiled_conv(
                     <IN_BUF_DEPTH, TILE_HEIGHT, TILE_WIDTH, PADDING, IN_FM_DEPTH, IN_FM_HEIGHT, IN_FM_WIDTH>
                     (conv_in_buf, input_feature_map, ti, tj, 0);
 
-                load_layer_params_from_DRAM
-                    <OUT_BUF_DEPTH, IN_BUF_DEPTH, KERNEL_HEIGHT, KERNEL_WIDTH>
-                    (conv_wt_buf, conv_bias_buf, (fm_t *) layer_weights, layer_bias, 
-                     OUT_FM_DEPTH, IN_FM_DEPTH, tk, 0);
-
+                load_layer_params_from_DRAM(conv_wt_buf, conv_bias_buf, layer_weights, layer_bias, tk);
                 conv_small(conv_out_buf, conv_in_buf, conv_wt_buf, conv_bias_buf);
 
                 store_output_tile_to_DRAM

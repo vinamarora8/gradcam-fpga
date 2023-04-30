@@ -3,8 +3,7 @@
 
 #include "params.hpp"
 
-template<int TILE_DEPTH, int TILE_HEIGHT, int TILE_WIDTH, int PADDING,
-int FM_DEPTH, int FM_HEIGHT, int FM_WIDTH>
+template<int TILE_DEPTH, int TILE_HEIGHT, int TILE_WIDTH, int PADDING, int FM_DEPTH, int FM_HEIGHT, int FM_WIDTH>
 void load_fm_tile_block_from_DRAM (
     fm_t in_fm_buf[TILE_DEPTH][TILE_HEIGHT + 2*PADDING][TILE_WIDTH + 2*PADDING],
     const fm_t in_fm[FM_DEPTH][FM_HEIGHT][FM_WIDTH],
@@ -49,54 +48,38 @@ void load_fm_tile_block_from_DRAM (
 }
 
 
-template<int OUT_BUF_DEPTH, int IN_BUF_DEPTH, int KERNEL_HEIGHT, int KERNEL_WIDTH>
 void load_layer_params_from_DRAM (
     wt_t weight_buf[OUT_BUF_DEPTH][IN_BUF_DEPTH][KERNEL_HEIGHT][KERNEL_WIDTH],
     wt_t bias_buf[OUT_BUF_DEPTH],
-    const wt_t weights[],
-    const wt_t bias[],
-    const dim_t OUT_FM_DEPTH,
-    const dim_t IN_FM_DEPTH,
-    const int tk,
-    const int tl
+    const wt_t weights[OUT_BUF_DEPTH][IN_BUF_DEPTH][KERNEL_HEIGHT][KERNEL_WIDTH],
+    const wt_t bias[OUT_BUF_DEPTH],
+    const int tk
 )
 {
     const int kernel_offset  = tk * OUT_BUF_DEPTH;
-    const int tile_layer_offset = tl * IN_BUF_DEPTH;
 
-    int idx_f = kernel_offset*IN_FM_DEPTH*KERNEL_HEIGHT*KERNEL_WIDTH;
     WEIGHT_KERNEL_NUM:
     for(int f = 0; f < OUT_BUF_DEPTH; f++)
     {
-        int idx_c = tile_layer_offset*KERNEL_HEIGHT*KERNEL_WIDTH;
         WEIGHT_KERNEL_DEPTH:
         for(int c = 0; c < IN_BUF_DEPTH; c++)
         {
-            int idx_kh = 0;
             WEIGHT_KERNEL_HEIGHT:
             for(int kh = 0; kh < KERNEL_HEIGHT; kh++)
 	        {
-                int idx_kw = 0;
                 WEIGHT_KERNEL_WIDTH:
 	            for(int kw = 0; kw < KERNEL_WIDTH; kw++)
 	            {
-                    weight_buf[f][c][kh][kw] = weights[idx_f + idx_c + idx_kh + idx_kw];
-                    idx_kw++;
+                    weight_buf[f][c][kh][kw] = weights[kernel_offset + f][c][kh][kw];
                 }
-                idx_kh += KERNEL_WIDTH;
             }
-            idx_c += KERNEL_HEIGHT*KERNEL_WIDTH;
         }
-        idx_f += IN_FM_DEPTH*KERNEL_HEIGHT*KERNEL_WIDTH;
     }
 
     BIAS:
     for(int f = 0; f < OUT_BUF_DEPTH; f++)
     {
-        if (tl == 0)
-            bias_buf[f] = bias[kernel_offset + f];
-        else
-            bias_buf[f] = 0;
+        bias_buf[f] = bias[kernel_offset + f];
     }
 
 }
