@@ -229,7 +229,6 @@ void resnet18(
     WRITE_TO_FILE_NAME(l1_out0, "l11_c1_out", L1_DEPTH, L1_SIDE, L1_SIDE);
     WRITE_TO_FILE_NAME(l1_out1, "l11_c2_out", L1_DEPTH, L1_SIDE, L1_SIDE);
 
-    #ifdef CSIM_DEBUG
     // layer 2
     // downsample
     tiled_conv
@@ -330,5 +329,4 @@ void resnet18(
     // fc
     linear_fc<L4_DEPTH, OUTPUT_SIZE>(avgpool_out, output, fc_weight, fc_bias);
     WRITE_TO_FILE(output, 1000, 1, 1);
-    #endif
 }

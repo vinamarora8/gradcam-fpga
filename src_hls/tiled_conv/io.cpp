@@ -38,6 +38,7 @@ void load_fm_tile_block_from_DRAM (
         {
             #pragma HLS PIPELINE off
             int idx_w = width_offset - P;
+            INPUT_BUFFER_WIDTH:
             for(int j = 0; j < BUF_WIDTH; j++)
             {
                 #pragma HLS PIPELINE off
@@ -96,7 +97,6 @@ void load_layer_params_from_DRAM (
                 WEIGHT_KERNEL_WIDTH:
 	            for(int kw = 0; kw < KERNEL_WIDTH; kw++)
 	            {
-                    #pragma HLS PIPELINE off
                     weight_buf[f][c][kh][kw] = weights[idx_f + idx_c + idx_kh + idx_kw];
                     idx_kw++;
                 }
@@ -110,11 +110,7 @@ void load_layer_params_from_DRAM (
     BIAS:
     for(int f = 0; f < OUT_BUF_DEPTH; f++)
     {
-        #pragma HLS PIPELINE off
-        if (tl == 0)
-            bias_buf[f] = bias[kernel_offset + f];
-        else
-            bias_buf[f] = 0;
+        bias_buf[f] = (tl == 0) ? bias[kernel_offset + f] : (wt_t) 0;
     }
 
 }
@@ -122,50 +118,58 @@ void load_layer_params_from_DRAM (
 template<int OUT_BUF_DEPTH, int OUT_BUF_HEIGHT, int OUT_BUF_WIDTH>
 void store_output_tile_to_DRAM (
     fm_t out_fm[],
-    const fm_t out_fm_buf[OUT_BUF_DEPTH][OUT_BUF_HEIGHT][OUT_BUF_WIDTH],
-    const fm_dims_s out_fm_dims,
+    fm_t out_fm_buf[OUT_BUF_DEPTH][OUT_BUF_HEIGHT][OUT_BUF_WIDTH],
     const int  ti,
     const int  tj,
     const int  tk,
     const bool relu,
+    const int  W,
     const int  WxH
 )
 {
-    #pragma HLS inline
-    const int OUT_FM_DEPTH = out_fm_dims.depth;
-    const int OUT_FM_HEIGHT = out_fm_dims.height;
-    const int OUT_FM_WIDTH = out_fm_dims.width;
+    #pragma HLS inline off
 
-    int idx_d = tk * OUT_BUF_DEPTH * WxH;
+    int idx_d = tk * OUT_BUF_DEPTH;
+    int idx_h = ti * OUT_BUF_HEIGHT;
+    int idx_w = tj * OUT_BUF_WIDTH;
+
+    int idx = idx_d*WxH + idx_h*W + idx_w;
+
     OUTPUT_BUFFER_DEPTH:
     for(int f = 0; f < OUT_BUF_DEPTH; f++)
     {
-        #pragma HLS PIPELINE off
-        int idx_h = ti * OUT_BUF_HEIGHT * OUT_FM_WIDTH;
         OUTPUT_BUFFER_HEIGHT:
         for(int i = 0; i < OUT_BUF_HEIGHT; i++)
         {
-            #pragma HLS PIPELINE off
-            int idx_w = tj * OUT_BUF_WIDTH;
             OUTPUT_BUFFER_WIDTH:
             for(int j = 0; j < OUT_BUF_WIDTH; j++)
             {
-                #pragma HLS PIPELINE off
-                int idx = idx_w + idx_h + idx_d;
+                #pragma HLS PIPELINE II=1
+
+                //int idx = (idx_w + j) + (idx_h + i)*W + (idx_d + f)*WxH; 
 
                 // ReLU in-place
+                /*
                 if(relu & (out_fm_buf[f][i][j] < (fm_t) 0))
                 {
-                    out_fm[idx] = (fm_t) 0;
+                    out_fm_buf[f][i][j] = (fm_t) 0;
                 }
-                else
+                */
+                
+                out_fm[idx] = out_fm_buf[f][i][j];
+
+                idx++;
+
+                if (j == OUT_BUF_WIDTH-1)
                 {
-                    out_fm[idx] = out_fm_buf[f][i][j];
+                    idx += W - OUT_BUF_WIDTH;
+
+                    if (i == (OUT_BUF_HEIGHT-1))
+                    {
+                        idx += WxH - W*OUT_BUF_HEIGHT;
+                    }
                 }
-                idx_w++;
              }
-            idx_h += OUT_FM_WIDTH;
         }
-        idx_d += WxH;
     }
 }

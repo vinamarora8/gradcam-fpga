@@ -111,10 +111,22 @@ void tiled_conv_core (
 
                 }
 
+                if (relu)
+                {
+                REL_D:
+                    for (int d = 0; d < OUT_BUF_DEPTH; d++)
+                    REL_H:
+                        for (int h = 0; h < OUT_BUF_HEIGHT; h++)
+                        REL_W:
+                            for (int w = 0; w < OUT_BUF_WIDTH; w++)
+                                if (conv_out_buf[d][h][w] < (fm_t) 0)
+                                    conv_out_buf[d][h][w] = (fm_t) 0;
+                }
+
                 store_output_tile_to_DRAM
                     <OUT_BUF_DEPTH, OUT_BUF_HEIGHT, OUT_BUF_WIDTH>
-                    (output_feature_map, conv_out_buf, out_fm_dims, ti, tj, 
-                     tk, relu, OUT_FM_WIDTH_x_HEIGHT);
+                    (output_feature_map, conv_out_buf, ti, tj, 
+                     tk, relu, OUT_FM_WIDTH, OUT_FM_WIDTH_x_HEIGHT);
 
             }
         }
