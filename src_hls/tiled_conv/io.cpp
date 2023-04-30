@@ -1,13 +1,11 @@
 #pragma once
 #include "../util.h"
 
-template<
-int TILE_DEPTH, int TILE_HEIGHT, int TILE_WIDTH, int PADDING,
-int FM_DEPTH, int FM_HEIGHT, int FM_WIDTH
->
+template<int TILE_DEPTH, int TILE_HEIGHT, int TILE_WIDTH, int PADDING>
 void load_fm_tile_block_from_DRAM (
     fm_t in_fm_buf[TILE_DEPTH][TILE_HEIGHT + 2*PADDING][TILE_WIDTH + 2*PADDING],
     const fm_t in_fm[],
+    const fm_dims_s dims,
     const int ti,
     const int tj,
     const int tk
@@ -22,6 +20,10 @@ void load_fm_tile_block_from_DRAM (
     const int BUF_WIDTH = TILE_WIDTH + 2*PADDING;
 
     const int P = PADDING;
+
+    dim_t FM_DEPTH = dims.depth;
+    dim_t FM_HEIGHT = dims.height;
+    dim_t FM_WIDTH = dims.width;
 
     int idx_dm = FM_HEIGHT*FM_WIDTH*depth_offset;
     INPUT_BUFFER_DEPTH:
@@ -94,20 +96,24 @@ void load_layer_params_from_DRAM (
 
 }
 
-template<int OUT_BUF_DEPTH, int OUT_BUF_HEIGHT, int OUT_BUF_WIDTH,
-         int OUT_FM_DEPTH, int OUT_FM_HEIGHT, int OUT_FM_WIDTH>
+template<int OUT_BUF_DEPTH, int OUT_BUF_HEIGHT, int OUT_BUF_WIDTH>
 void store_output_tile_to_DRAM (
     fm_t out_fm[],
     const fm_t out_fm_buf[OUT_BUF_DEPTH][OUT_BUF_HEIGHT][OUT_BUF_WIDTH],
+    const fm_dims_s out_fm_dims,
     const int  ti,
     const int  tj,
     const int  kernel_group,
     const bool relu
 )
 {
-    const int depth_offset  = kernel_group * OUT_BUF_DEPTH;
-    const int height_offset = ti * OUT_BUF_HEIGHT;
-    const int width_offset  = tj * OUT_BUF_WIDTH;
+    const int OUT_FM_DEPTH = out_fm_dims.depth;
+    const int OUT_FM_HEIGHT = out_fm_dims.height;
+    const int OUT_FM_WIDTH = out_fm_dims.width;
+
+    const dim_t depth_offset  = kernel_group * OUT_BUF_DEPTH;
+    const dim_t height_offset = ti * OUT_BUF_HEIGHT;
+    const dim_t width_offset  = tj * OUT_BUF_WIDTH;
 
     int idx_d = (depth_offset)*OUT_FM_WIDTH*OUT_FM_HEIGHT;
     OUTPUT_BUFFER_DEPTH:

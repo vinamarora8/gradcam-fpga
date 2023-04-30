@@ -18,6 +18,7 @@ void tiled_conv (
     const bool inplace_residual = false
 )
 {
+    static_assert(STRIDE == 1 || STRIDE == 2, "STRIDE > 2 not implemented");
     static_assert(TILE_HEIGHT % STRIDE == 0, "TILE_HEIGHT must be a multiple of STRIDE");
     static_assert(TILE_WIDTH % STRIDE == 0, "TILE_WIDTH must be a multiple of STRIDE");
     static_assert(IN_FM_HEIGHT % STRIDE == 0, "IN_FM_HEIGHT must be a multiple of STRIDE");
@@ -25,6 +26,8 @@ void tiled_conv (
     static_assert(OUT_FM_DEPTH % OUT_BUF_DEPTH == 0, "OUT_FM_DEPTH must be a multiple of OUT_BUF_DEPTH");
     static_assert(IN_FM_HEIGHT % TILE_HEIGHT == 0, "IN_FM_HEIGHT must be a multiple of TILE_HEIGHT");
     static_assert(IN_FM_WIDTH % TILE_WIDTH == 0, "IN_FM_WIDTH must be a multiple of TILE_WIDTH");
+
+    const int STRIDE_SHIFT = STRIDE == 1 ? 0 : 1;
 
     const int MARGIN = 2 * PADDING;
     const int IN_BUF_DEPTH = IN_FM_DEPTH;
@@ -38,6 +41,10 @@ void tiled_conv (
     const int KERNEL_GRPS = OUT_FM_DEPTH / OUT_BUF_DEPTH;
     const int N_TILE_ROWS = IN_FM_HEIGHT / TILE_HEIGHT;
     const int N_TILE_COLS = IN_FM_WIDTH  / TILE_WIDTH;
+
+    const fm_dims_s in_fm_dims = {IN_FM_DEPTH, IN_FM_HEIGHT, IN_FM_WIDTH};
+    const fm_dims_s out_fm_dims = {OUT_FM_DEPTH, OUT_FM_HEIGHT, OUT_FM_WIDTH};
+
 
     //--------------------------------------------------------------------------
     // Defines interface IO ports for HLS.
@@ -59,7 +66,7 @@ void tiled_conv (
     //--------------------------------------------------------------------------
     // Process each tile iteratively
     //--------------------------------------------------------------------------
-
+    
     TILE_ROW:
     for(int ti = 0; ti < N_TILE_ROWS; ti++)
     {
@@ -68,9 +75,8 @@ void tiled_conv (
         {
 
             load_fm_tile_block_from_DRAM
-                <IN_BUF_DEPTH, TILE_HEIGHT, TILE_WIDTH, PADDING,
-                IN_FM_DEPTH, IN_FM_HEIGHT, IN_FM_WIDTH>
-                (conv_in_buf, input_feature_map, ti, tj, 0);
+                <IN_BUF_DEPTH, TILE_HEIGHT, TILE_WIDTH, PADDING>
+                (conv_in_buf, input_feature_map, in_fm_dims, ti, tj, 0);
 
             KERNEL_GRP:
             for (int tk = 0; tk < KERNEL_GRPS; tk++)
@@ -79,9 +85,8 @@ void tiled_conv (
                 if (inplace_residual)
                 {
                     load_fm_tile_block_from_DRAM
-                        <OUT_BUF_DEPTH, OUT_BUF_HEIGHT, OUT_BUF_WIDTH, 0,
-                        OUT_FM_DEPTH, OUT_FM_HEIGHT, OUT_FM_WIDTH>
-                        (conv_out_buf, output_feature_map, ti, tj, tk);
+                        <OUT_BUF_DEPTH, OUT_BUF_HEIGHT, OUT_BUF_WIDTH, 0>
+                        (conv_out_buf, output_feature_map, out_fm_dims, ti, tj, tk);
                 }
                 else
                 {
@@ -103,9 +108,8 @@ void tiled_conv (
                     (conv_out_buf, conv_in_buf, conv_wt_buf, conv_bias_buf);
 
                 store_output_tile_to_DRAM
-                    <OUT_BUF_DEPTH, OUT_BUF_HEIGHT, OUT_BUF_WIDTH,
-                    OUT_FM_DEPTH, OUT_FM_HEIGHT, OUT_FM_WIDTH>
-                    (output_feature_map, conv_out_buf, ti, tj, tk, relu);
+                    <OUT_BUF_DEPTH, OUT_BUF_HEIGHT, OUT_BUF_WIDTH>
+                    (output_feature_map, conv_out_buf, out_fm_dims, ti, tj, tk, relu);
 
             }
         }
