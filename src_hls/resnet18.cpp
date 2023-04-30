@@ -4,10 +4,10 @@
 #include "avg_pool.h"
 #include "linear_fc.h"
 #include "tiled_conv/tiled_conv.cpp"
-#include "sim_util.h"
 #include "residual.cpp"
 
 #ifdef CSIM_DEBUG
+#include "sim_util.h"
 std::string root_dir = "out/";
 #define WRITE_TO_FILE(var, dim0, dim1, dim2) \
 { \

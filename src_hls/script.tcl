@@ -1,11 +1,11 @@
 open_project proj
 
 # this is your top module 
-set_top top
+set_top resnet18
 
 # this is your file that to be synthesized as FPGA design
 # TODO
-add_files top.cpp
+add_files resnet18.cpp
 
 # this is your testbench (specified by -tb option)
 # add_files -tb sim.cpp

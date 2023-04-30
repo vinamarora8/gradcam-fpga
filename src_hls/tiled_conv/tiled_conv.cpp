@@ -1,4 +1,4 @@
-#include "util.h"
+#include "../util.h"
 #include "conv.cpp"
 #include "io.cpp"
 #include <iostream>
