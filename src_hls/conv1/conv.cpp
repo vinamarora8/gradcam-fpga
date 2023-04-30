@@ -13,13 +13,17 @@ void conv_small (
 #pragma HLS INLINE off
     const int S = STRIDE;
 
-OUT_COL:  for (int ow = 0; ow < OUT_BUF_WIDTH; ow++)
-IN_FEAT:  for (int id = 0; id < IN_BUF_DEPTH; id++)
-IN_ROW:   for (int kh = 0; kh < KERNEL_HEIGHT; kh++)
-IN_COL:   for (int kw = 0; kw < KERNEL_WIDTH; kw++) 
-OUT_ROW:  for (int oh = 0; oh < OUT_BUF_HEIGHT; oh++)
-OUT_FEAT: for (int of = 0; of < OUT_BUF_DEPTH; of++)
-    {
+OUT_COL:  for (int ow = 0; ow < OUT_BUF_WIDTH; ow++) {
+#pragma HLS PIPELINE off
+IN_FEAT:  for (int id = 0; id < IN_BUF_DEPTH; id++) {
+#pragma HLS PIPELINE off
+IN_ROW:   for (int kh = 0; kh < KERNEL_HEIGHT; kh++) {
+#pragma HLS PIPELINE off
+IN_COL:   for (int kw = 0; kw < KERNEL_WIDTH; kw++)  {
+#pragma HLS PIPELINE off
+OUT_ROW:  for (int oh = 0; oh < OUT_BUF_HEIGHT; oh++) {
+#pragma HLS PIPELINE off
+OUT_FEAT: for (int of = 0; of < OUT_BUF_DEPTH; of++) {
         #pragma HLS PIPELINE II=1
         if (id == 0 && kh == 0 && kw == 0)
         {
@@ -30,5 +34,5 @@ OUT_FEAT: for (int of = 0; of < OUT_BUF_DEPTH; of++)
         int j = S*ow + kw;
 
         Y_buf[of][oh][ow] += X_buf[id][i][j] * W_buf[of][id][kh][kw];
-    }
+}}}}}}
 }
