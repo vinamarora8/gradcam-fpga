@@ -5,15 +5,18 @@
 #include <cassert>
 
 template<
-int OUT_FM_DEPTH, int IN_FM_DEPTH, int KERNEL_HEIGHT, int KERNEL_WIDTH, int STRIDE, int PADDING, // Kernel
-int IN_FM_HEIGHT, int IN_FM_WIDTH,  // Input
-int OUT_BUF_DEPTH, int TILE_HEIGHT, int TILE_WIDTH // Tile shapes
+int OUT_BUF_DEPTH, int IN_BUF_DEPTH, int KERNEL_HEIGHT, int KERNEL_WIDTH, int STRIDE, int PADDING, // Kernel
+int TILE_HEIGHT, int TILE_WIDTH // Tile shapes
 >
-void tiled_conv (
+void tiled_conv_core (
     fm_t output_feature_map[],
     const fm_t input_feature_map[],
-    const wt_t layer_weights[OUT_FM_DEPTH][IN_FM_DEPTH][KERNEL_HEIGHT][KERNEL_WIDTH],
-    const wt_t layer_bias[OUT_FM_DEPTH],
+    const wt_t layer_weights[],
+    const wt_t layer_bias[],
+    const int KERNEL_GRPS,
+    const int N_TILE_LAYERS,
+    const int N_TILE_ROWS,
+    const int N_TILE_COLS,
     const bool relu,
     const bool inplace_residual = false
 )
@@ -21,27 +24,34 @@ void tiled_conv (
     static_assert(STRIDE == 1 || STRIDE == 2, "STRIDE > 2 not implemented");
     static_assert(TILE_HEIGHT % STRIDE == 0, "TILE_HEIGHT must be a multiple of STRIDE");
     static_assert(TILE_WIDTH % STRIDE == 0, "TILE_WIDTH must be a multiple of STRIDE");
-    static_assert(IN_FM_HEIGHT % STRIDE == 0, "IN_FM_HEIGHT must be a multiple of STRIDE");
-    static_assert(IN_FM_WIDTH % STRIDE == 0, "IN_FM_WIDTH must be a multiple of STRIDE");
-    static_assert(OUT_FM_DEPTH % OUT_BUF_DEPTH == 0, "OUT_FM_DEPTH must be a multiple of OUT_BUF_DEPTH");
-    static_assert(IN_FM_HEIGHT % TILE_HEIGHT == 0, "IN_FM_HEIGHT must be a multiple of TILE_HEIGHT");
-    static_assert(IN_FM_WIDTH % TILE_WIDTH == 0, "IN_FM_WIDTH must be a multiple of TILE_WIDTH");
 
-    const int STRIDE_SHIFT = STRIDE == 1 ? 0 : 1;
+    const int IN_FM_DEPTH = IN_BUF_DEPTH * N_TILE_LAYERS;
+    const int IN_FM_HEIGHT = TILE_HEIGHT * N_TILE_ROWS;
+    const int IN_FM_WIDTH = TILE_WIDTH * N_TILE_COLS;
+    const int OUT_FM_DEPTH = OUT_BUF_DEPTH * KERNEL_GRPS;
+    const int OUT_FM_HEIGHT = STRIDE == 1 ? IN_FM_HEIGHT : IN_FM_HEIGHT >> 1;
+    const int OUT_FM_WIDTH = STRIDE == 1 ? IN_FM_WIDTH : IN_FM_WIDTH >> 1;
+
+
+    assert(IN_FM_HEIGHT % STRIDE == 0);
+    assert(IN_FM_WIDTH % STRIDE == 0);
+    assert(OUT_FM_DEPTH % OUT_BUF_DEPTH == 0);
+    assert(IN_FM_HEIGHT % TILE_HEIGHT == 0);
+    assert(IN_FM_WIDTH % TILE_WIDTH == 0);
+
 
     const int MARGIN = 2 * PADDING;
-    const int IN_BUF_DEPTH = IN_FM_DEPTH == 3 ? 3 : 32;
     const int IN_BUF_HEIGHT = TILE_HEIGHT + MARGIN;
     const int IN_BUF_WIDTH = TILE_WIDTH + MARGIN;
-    const int OUT_BUF_HEIGHT = TILE_HEIGHT / STRIDE;
-    const int OUT_BUF_WIDTH = TILE_WIDTH / STRIDE;
-    const int OUT_FM_HEIGHT = IN_FM_HEIGHT / STRIDE;
-    const int OUT_FM_WIDTH = IN_FM_WIDTH / STRIDE;
+    const int OUT_BUF_HEIGHT = STRIDE == 1 ? TILE_HEIGHT : TILE_HEIGHT >> 1;
+    const int OUT_BUF_WIDTH = STRIDE == 1 ? TILE_WIDTH : TILE_WIDTH >> 1;
 
+    /*
     const int KERNEL_GRPS = OUT_FM_DEPTH / OUT_BUF_DEPTH;
     const int N_TILE_ROWS = IN_FM_HEIGHT / TILE_HEIGHT;
     const int N_TILE_COLS = IN_FM_WIDTH  / TILE_WIDTH;
     const int N_TILE_LAYERS = IN_FM_DEPTH / IN_BUF_DEPTH;
+    */
 
     const fm_dims_s in_fm_dims = {IN_FM_DEPTH, IN_FM_HEIGHT, IN_FM_WIDTH};
     const fm_dims_s out_fm_dims = {OUT_FM_DEPTH, OUT_FM_HEIGHT, OUT_FM_WIDTH};
@@ -113,4 +123,49 @@ void tiled_conv (
         }
     }
 }
+
+
+template<
+int OUT_FM_DEPTH, int IN_FM_DEPTH, int KERNEL_HEIGHT, int KERNEL_WIDTH, int STRIDE, int PADDING, // Kernel
+int IN_FM_HEIGHT, int IN_FM_WIDTH,  // Input
+int OUT_BUF_DEPTH, int TILE_HEIGHT, int TILE_WIDTH // Tile shapes
+>
+void tiled_conv (
+    fm_t output_feature_map[],
+    const fm_t input_feature_map[],
+    const wt_t layer_weights[OUT_FM_DEPTH][IN_FM_DEPTH][KERNEL_HEIGHT][KERNEL_WIDTH],
+    const wt_t layer_bias[OUT_FM_DEPTH],
+    const bool relu,
+    const bool inplace_residual = false
+)
+{ 
+
+    const int IN_BUF_DEPTH = IN_FM_DEPTH < 16 ? IN_FM_DEPTH : 16;
+    const int KERNEL_GRPS = OUT_FM_DEPTH / OUT_BUF_DEPTH;
+    const int N_TILE_ROWS = IN_FM_HEIGHT / TILE_HEIGHT;
+    const int N_TILE_COLS = IN_FM_WIDTH  / TILE_WIDTH;
+    const int N_TILE_LAYERS = IN_FM_DEPTH / IN_BUF_DEPTH;
+
+    tiled_conv_core
+        <OUT_BUF_DEPTH, IN_BUF_DEPTH, KERNEL_HEIGHT, KERNEL_WIDTH, STRIDE, PADDING,
+        TILE_HEIGHT, TILE_WIDTH>
+        (output_feature_map,
+        input_feature_map,
+        (fm_t *) layer_weights,
+        (fm_t *) layer_bias,
+        KERNEL_GRPS,
+        N_TILE_LAYERS,
+        N_TILE_ROWS,
+        N_TILE_COLS,
+        relu,
+        inplace_residual
+        );
+
+}
+        
+
+
+
+
+
 
