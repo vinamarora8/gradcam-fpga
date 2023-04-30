@@ -17,10 +17,12 @@ void linear_fc(
     wt_t biases[NO]
 )
 {
+FC_OUTPUT:
     for (int j = 0; j < NO; j++){
 #pragma HLS pipeline off
         fm_t sum = biases[j];
 
+    FC_INPUT:
         for (int i = 0; i < NI; i++){
 #pragma HLS pipeline off
 #pragma HLS unroll factor=1
