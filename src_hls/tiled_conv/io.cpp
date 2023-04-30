@@ -127,7 +127,7 @@ void store_output_tile_to_DRAM (
     const fm_dims_s out_fm_dims,
     const int  ti,
     const int  tj,
-    const int  kernel_group,
+    int &idx_d,
     const bool relu
 )
 {
@@ -137,11 +137,11 @@ void store_output_tile_to_DRAM (
     const int OUT_FM_HEIGHT = out_fm_dims.height;
     const int OUT_FM_WIDTH = out_fm_dims.width;
 
-    const dim_t depth_offset  = kernel_group * OUT_BUF_DEPTH;
+    //const dim_t depth_offset  = kernel_group * OUT_BUF_DEPTH;
     const dim_t height_offset = ti * OUT_BUF_HEIGHT;
     const dim_t width_offset  = tj * OUT_BUF_WIDTH;
 
-    int idx_d = (depth_offset)*OUT_FM_WIDTH*OUT_FM_HEIGHT;
+    //int idx_d = (depth_offset)*OUT_FM_WIDTH*OUT_FM_HEIGHT;
     OUTPUT_BUFFER_DEPTH:
     for(int f = 0; f < OUT_BUF_DEPTH; f++)
     {
