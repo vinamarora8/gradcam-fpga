@@ -5,10 +5,10 @@ set_top resnet18
 
 # this is your file that to be synthesized as FPGA design
 # TODO
-add_files real_matmul.cpp
+add_files resnet18.cpp
 
 # this is your testbench (specified by -tb option)
-add_files -tb main.cpp
+# add_files -tb sim.cpp
 
 open_solution "solution1" -flow_target vitis
 
@@ -25,6 +25,6 @@ csynth_design
 #cosim_design
 
 # Export IP to Vivado
-export_design -format ip_catalog
+#export_design -format ip_catalog
 
 exit

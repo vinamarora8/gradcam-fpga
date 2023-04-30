@@ -16,10 +16,14 @@ void avg_pool(
 )
 {
     for (int c = 0; c < ID; c++){
+#pragma HLS pipeline off
         fm_t sum = 0;
 
         for (int i = 0; i < IH; i++){
+#pragma HLS pipeline off
             for (int j = 0; j < IW; j++){
+#pragma HLS pipeline off
+#pragma HLS unroll factor=1
                 sum += in[c][i][j];
             }
         }

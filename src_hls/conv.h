@@ -41,13 +41,14 @@ void conv (
                         {
                             if (id == 0 && kh == 0 && kw == 0)
                             {
-                                if (BIAS)
-                                    y[of][oh][ow] = biases[of];
+                                if (RES)
+                                    y[of][oh][ow] = res[of][oh][ow];
                                 else
                                     y[of][oh][ow] = (fm_t) 0;
 
-                                if (RES)
-                                    y[of][oh][ow] += res[of][oh][ow];
+                                if (BIAS)
+                                    y[of][oh][ow] += biases[of];
+
                             }
 
                             int i = (ST * oh) - PD + kh;
