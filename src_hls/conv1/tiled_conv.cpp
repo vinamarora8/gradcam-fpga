@@ -5,14 +5,13 @@
 namespace conv1
 {
 
-#include "params.h"
+#include "params.hpp"
 #include "conv.cpp"
 #include "io.cpp"
 
 static_assert(STRIDE == 1 || STRIDE == 2, "STRIDE > 2 not implemented");
 static_assert(TILE_HEIGHT % STRIDE == 0, "TILE_HEIGHT must be a multiple of STRIDE");
 static_assert(TILE_WIDTH % STRIDE == 0, "TILE_WIDTH must be a multiple of STRIDE");
-
 static_assert(IN_FM_HEIGHT % STRIDE == 0);
 static_assert(IN_FM_WIDTH % STRIDE == 0);
 static_assert(OUT_FM_DEPTH % OUT_BUF_DEPTH == 0);

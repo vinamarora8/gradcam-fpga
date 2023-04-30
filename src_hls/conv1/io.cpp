@@ -1,7 +1,7 @@
 #pragma once
 #include "../util.h"
 
-#include "params.h"
+#include "params.hpp"
 
 template<int TILE_DEPTH, int TILE_HEIGHT, int TILE_WIDTH, int PADDING,
 int FM_DEPTH, int FM_HEIGHT, int FM_WIDTH>

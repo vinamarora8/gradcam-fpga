@@ -1,7 +1,7 @@
 #pragma once
 #include "../util.h"
 
-#include "params.h"
+#include "params.hpp"
 
 void conv_small (
     fm_t Y_buf[OUT_BUF_DEPTH][OUT_BUF_HEIGHT][OUT_BUF_WIDTH],
