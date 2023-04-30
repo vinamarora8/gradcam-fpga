@@ -104,9 +104,19 @@ void resnet18(
     
     WRITE_TO_FILE(input, 3, 224, 224);
 
+    fm_t *conv1_out = fm_dram;
+    fm_t *maxpool_out = fm_dram + MAXPOOL_FM_OFFSET;
+    fm_t *l1_out0 = fm_dram + L1_FM_OFFSET;
+    fm_t *l1_out1 = maxpool_out;
+    fm_t *l2_out0 = fm_dram + L2_FM_OFFSET;
+    fm_t *l2_out1 = l2_out0 + L2_SIZE;
+    fm_t *l3_out0 = fm_dram + L3_FM_OFFSET;
+    fm_t *l3_out1 = l3_out0 + L3_SIZE;
+    fm_t *l4_out0 = fm_dram + L4_FM_OFFSET;
+    fm_t *l4_out1 = l4_out0 + L4_SIZE;
+    fm_t *avgpool_out = fm_dram + AVG_POOL_OFFSET;
 
     // conv1
-    fm_t *conv1_out = fm_dram;
     tiled_conv
         <64, 3, 7, 7, 2, 3,
         224, 224, 64, 32, 32>
@@ -115,7 +125,6 @@ void resnet18(
 
 
     // maxpool
-    fm_t *maxpool_out = fm_dram + MAXPOOL_FM_OFFSET;
     maxpool2d<64, 112, 112, 
             64, 56, 56, 
             3, 3, 2, 1>((fm_t (*)[56][56])maxpool_out, (fm_t (*)[112][112])conv1_out);
@@ -123,9 +132,6 @@ void resnet18(
 
     // layer 1 
     // block 0
-    fm_t *l1_out0 = fm_dram + L1_FM_OFFSET;
-    fm_t *l1_out1 = maxpool_out;
-    // Testing tiled_conv
     tiled_conv
         <L1_DEPTH, MAXPOOL_DEPTH, 3, 3, 1, 1,
         L1_SIDE, L1_SIDE, 64, 7, 7>
@@ -150,8 +156,6 @@ void resnet18(
 
     // layer 2
     // downsample
-    fm_t *l2_out0 = fm_dram + L2_FM_OFFSET;
-    fm_t *l2_out1 = l2_out0 + L2_SIZE;
     tiled_conv
         <L2_DEPTH, L1_DEPTH, 1, 1, 2, 0,
         L1_SIDE, L1_SIDE, 64, 14, 14>
@@ -181,8 +185,6 @@ void resnet18(
     WRITE_TO_FILE_NAME(l2_out1, "l21_c2_out", L2_DEPTH, L2_SIDE, L2_SIDE);
 
     // layer 3
-    fm_t *l3_out0 = fm_dram + L3_FM_OFFSET;
-    fm_t *l3_out1 = l3_out0 + L3_SIZE;
     // downsample
     tiled_conv
         <L3_DEPTH, L2_DEPTH, 1, 1, 2, 0,
@@ -214,8 +216,6 @@ void resnet18(
 
 
     // layer 4
-    fm_t *l4_out0 = fm_dram + L4_FM_OFFSET;
-    fm_t *l4_out1 = l4_out0 + L4_SIZE;
     // downsample
     tiled_conv
         <L4_DEPTH, L3_DEPTH, 1, 1, 2, 0,
@@ -247,7 +247,6 @@ void resnet18(
 
 
     // avgpool
-    fm_t *avgpool_out = fm_dram + AVG_POOL_OFFSET;
     avg_pool<L4_DEPTH, 7, 7>((fm_t (*)[7][7])l4_out1, avgpool_out);
     WRITE_TO_FILE(avgpool_out, AVG_POOL_SIZE, 1, 1);
 
