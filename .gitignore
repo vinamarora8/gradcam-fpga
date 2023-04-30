@@ -23,3 +23,4 @@ src_hls/out
 .vscode
 
 proj/
+*.log

@@ -4,6 +4,7 @@
 #include "avg_pool.h"
 #include "linear_fc.h"
 #include "tiled_conv/tiled_conv.cpp"
+#include "conv1/tiled_conv.cpp"
 #include "residual.cpp"
 
 #ifdef CSIM_DEBUG
@@ -140,10 +141,7 @@ void resnet18(
     fm_t *avgpool_out = fm_dram + AVG_POOL_OFFSET;
 
     // conv1
-    tiled_conv
-        <CONV1_DEPTH, 3, 7, 7, 2, 3,
-        INP_SIDE, INP_SIDE, 64, 3, 32, 32>
-        (conv1_out, (fm_t *) input, conv1_weight, conv1_bias, true);
+    conv1::tiled_conv((fm_t (*)[112][112]) conv1_out, input, conv1_weight, conv1_bias);
     WRITE_TO_FILE(conv1_out, CONV1_DEPTH, CONV1_SIDE, CONV1_SIDE);
 
 
