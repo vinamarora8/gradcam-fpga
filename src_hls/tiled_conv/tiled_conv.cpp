@@ -10,8 +10,8 @@ int IN_FM_HEIGHT, int IN_FM_WIDTH,  // Input
 int OUT_BUF_DEPTH, int TILE_HEIGHT, int TILE_WIDTH // Tile shapes
 >
 void tiled_conv (
-    fm_t output_feature_map[OUT_FM_DEPTH][IN_FM_HEIGHT / STRIDE][IN_FM_WIDTH / STRIDE],
-    const fm_t input_feature_map[IN_FM_DEPTH][IN_FM_HEIGHT][IN_FM_WIDTH],
+    fm_t output_feature_map[],
+    const fm_t input_feature_map[],
     const wt_t layer_weights[OUT_FM_DEPTH][IN_FM_DEPTH][KERNEL_HEIGHT][KERNEL_WIDTH],
     const wt_t layer_bias[OUT_FM_DEPTH],
     const bool relu,
@@ -70,7 +70,7 @@ void tiled_conv (
             load_fm_tile_block_from_DRAM
                 <IN_BUF_DEPTH, TILE_HEIGHT, TILE_WIDTH, PADDING,
                 IN_FM_DEPTH, IN_FM_HEIGHT, IN_FM_WIDTH>
-                (conv_in_buf, input_feature_map[0][0], ti, tj, 0);
+                (conv_in_buf, input_feature_map, ti, tj, 0);
 
             KERNEL_GRP:
             for (int tk = 0; tk < KERNEL_GRPS; tk++)
@@ -81,7 +81,7 @@ void tiled_conv (
                     load_fm_tile_block_from_DRAM
                         <OUT_BUF_DEPTH, OUT_BUF_HEIGHT, OUT_BUF_WIDTH, 0,
                         OUT_FM_DEPTH, OUT_FM_HEIGHT, OUT_FM_WIDTH>
-                        (conv_out_buf, output_feature_map[0][0], ti, tj, tk);
+                        (conv_out_buf, output_feature_map, ti, tj, tk);
                 }
                 else
                 {
@@ -105,7 +105,7 @@ void tiled_conv (
                 store_output_tile_to_DRAM
                     <OUT_BUF_DEPTH, OUT_BUF_HEIGHT, OUT_BUF_WIDTH,
                     OUT_FM_DEPTH, OUT_FM_HEIGHT, OUT_FM_WIDTH>
-                    (output_feature_map[0][0], conv_out_buf, ti, tj, tk, relu);
+                    (output_feature_map, conv_out_buf, ti, tj, tk, relu);
 
             }
         }

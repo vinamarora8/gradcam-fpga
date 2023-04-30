@@ -64,24 +64,24 @@ void resnet18(
     WRITE_TO_FILE(input, 3, 224, 224);
 
     // conv1
-    fm_t conv1_out[64][112][112];
+    fm_t conv1_out[64*112*112];
     tiled_conv
         <64, 3, 7, 7, 2, 3,
         224, 224, 64, 32, 32>
-        (conv1_out, input, conv1_weight, conv1_bias, true);
+        (conv1_out, (fm_t *) input, conv1_weight, conv1_bias, true);
     WRITE_TO_FILE(conv1_out, 64, 112, 112);
 
 
     // maxpool
-    fm_t maxpool_out[64][56][56];
+    fm_t maxpool_out[64*56*56];
     maxpool2d<64, 112, 112, 
             64, 56, 56, 
-            3, 3, 2, 1>(maxpool_out, conv1_out);
+            3, 3, 2, 1>((fm_t (*)[56][56])maxpool_out, (fm_t (*)[112][112])conv1_out);
     WRITE_TO_FILE(maxpool_out, 64, 56, 56);
 
     // layer 1 
     // block 0
-    fm_t l1_out0[64][56][56];
+    fm_t l1_out0[64*56*56];
     // Testing tiled_conv
     tiled_conv
         <64, 64, 3, 3, 1, 1,
@@ -107,8 +107,8 @@ void resnet18(
 
     // layer 2
     // downsample
-    fm_t l2_out0[128][28][28];
-    fm_t l2_out1[128][28][28];
+    fm_t l2_out0[128*28*28];
+    fm_t l2_out1[128*28*28];
     tiled_conv
         <128, 64, 1, 1, 2, 0,
         56, 56, 64, 14, 14>
@@ -138,8 +138,8 @@ void resnet18(
     WRITE_TO_FILE_NAME(l2_out1, "l21_c2_out", 128, 28, 28);
 
     // layer 3
-    fm_t l3_out0[256][14][14];
-    fm_t l3_out1[256][14][14];
+    fm_t l3_out0[256*14*14];
+    fm_t l3_out1[256*14*14];
     // downsample
     tiled_conv
         <256, 128, 1, 1, 2, 0,
@@ -171,8 +171,8 @@ void resnet18(
 
 
     // layer 4
-    fm_t l4_out0[512][7][7];
-    fm_t l4_out1[512][7][7];
+    fm_t l4_out0[512*7*7];
+    fm_t l4_out1[512*7*7];
     // downsample
     tiled_conv
         <512, 256, 1, 1, 2, 0,
@@ -205,7 +205,7 @@ void resnet18(
 
     // avgpool
     fm_t avgpool_out[512];
-    avg_pool<512, 7, 7>(l4_out1, avgpool_out);
+    avg_pool<512, 7, 7>((fm_t (*)[7][7])l4_out1, avgpool_out);
     WRITE_TO_FILE(avgpool_out, 512, 1, 1);
 
     
