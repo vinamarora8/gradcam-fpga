@@ -128,7 +128,7 @@ void tiled_conv_core (
 template<
 int OUT_FM_DEPTH, int IN_FM_DEPTH, int KERNEL_HEIGHT, int KERNEL_WIDTH, int STRIDE, int PADDING, // Kernel
 int IN_FM_HEIGHT, int IN_FM_WIDTH,  // Input
-int OUT_BUF_DEPTH, int TILE_HEIGHT, int TILE_WIDTH // Tile shapes
+int OUT_BUF_DEPTH, int IN_BUF_DEPTH, int TILE_HEIGHT, int TILE_WIDTH // Tile shapes
 >
 inline void tiled_conv (
     fm_t output_feature_map[],
@@ -140,7 +140,8 @@ inline void tiled_conv (
 )
 { 
 
-    const int IN_BUF_DEPTH = IN_FM_DEPTH < 64 ? IN_FM_DEPTH : 64;
+    static_assert(IN_FM_DEPTH >= IN_BUF_DEPTH, "IN_FM_WIDTH >= IN_BUF_DEPTH");
+
     const int KERNEL_GRPS = OUT_FM_DEPTH / OUT_BUF_DEPTH;
     const int N_TILE_ROWS = IN_FM_HEIGHT / TILE_HEIGHT;
     const int N_TILE_COLS = IN_FM_WIDTH  / TILE_WIDTH;
@@ -163,9 +164,6 @@ inline void tiled_conv (
 
 }
         
-
-
-
 
 
 
