@@ -33,9 +33,25 @@
 #define L4_DEPTH (L3_DEPTH*2)
 #define L4_SIZE (L4_DEPTH * L4_SIDE * L4_SIDE)
 
+#define AVG_POOL_SIZE L4_DEPTH
+#define OUTPUT_SIZE 1000
+
+// FM_DRAM offsets
+#define CONV1_FM_OFFSET 0
+#define MAXPOOL_FM_OFFSET (CONV1_FM_OFFSET + CONV1_SIZE)
+#define L1_FM_OFFSET (MAXPOOL_FM_OFFSET + MAXPOOL_SIZE)
+#define L2_FM_OFFSET (L1_FM_OFFSET + 2*L1_SIZE)
+#define L3_FM_OFFSET (L2_FM_OFFSET + 2*L2_SIZE)
+#define L4_FM_OFFSET (L3_FM_OFFSET + 2*L3_SIZE)
+#define AVG_POOL_OFFSET (L4_FM_OFFSET + 2*L4_SIZE)
+#define OUTPUT_OFFSET (AVG_POOL_OFFSET + AVG_POOL_SIZE)
+
+#define FM_DRAM_SIZE (OUTPUT_OFFSET + OUTPUT_SIZE)
+
 void resnet18(
         fm_t input[3][224][224],
         fm_t output[1000],
+        fm_t fm_dram[],
         wt_t conv1_weight[64][3][7][7],
         wt_t conv1_bias[64],
         // layer 1
@@ -86,11 +102,11 @@ void resnet18(
         )
 {
     
-
     WRITE_TO_FILE(input, 3, 224, 224);
 
+
     // conv1
-    fm_t conv1_out[64*112*112];
+    fm_t *conv1_out = fm_dram;
     tiled_conv
         <64, 3, 7, 7, 2, 3,
         224, 224, 64, 32, 32>
@@ -99,7 +115,7 @@ void resnet18(
 
 
     // maxpool
-    fm_t maxpool_out[64*56*56];
+    fm_t *maxpool_out = fm_dram + MAXPOOL_FM_OFFSET;
     maxpool2d<64, 112, 112, 
             64, 56, 56, 
             3, 3, 2, 1>((fm_t (*)[56][56])maxpool_out, (fm_t (*)[112][112])conv1_out);
@@ -107,39 +123,40 @@ void resnet18(
 
     // layer 1 
     // block 0
-    fm_t l1_out0[64*56*56];
+    fm_t *l1_out0 = fm_dram + L1_FM_OFFSET;
+    fm_t *l1_out1 = maxpool_out;
     // Testing tiled_conv
     tiled_conv
         <L1_DEPTH, MAXPOOL_DEPTH, 3, 3, 1, 1,
         L1_SIDE, L1_SIDE, 64, 7, 7>
-    (l1_out0, maxpool_out, l10_c1_weight, l10_c1_bias, true);
+    (l1_out0, l1_out1, l10_c1_weight, l10_c1_bias, true);
     tiled_conv
         <L1_DEPTH, L1_DEPTH, 3, 3, 1, 1,
         L1_SIDE, L1_SIDE, 64, 7, 7>
-    (maxpool_out, l1_out0, l10_c2_weight, l10_c2_bias, true, true);
-    WRITE_TO_FILE_NAME(l1_out0, "l10_c1_out", 64, 56, 56);
-    WRITE_TO_FILE_NAME(maxpool_out, "l10_c2_out", 64, 56, 56);
+    (l1_out1, l1_out0, l10_c2_weight, l10_c2_bias, true, true);
+    WRITE_TO_FILE_NAME(l1_out0, "l10_c1_out", L1_DEPTH, L1_SIDE, L1_SIDE);
+    WRITE_TO_FILE_NAME(l1_out1, "l10_c2_out", L1_DEPTH, L1_SIDE, L1_SIDE);
     // block 1
     tiled_conv
         <L1_DEPTH, L1_DEPTH, 3, 3, 1, 1,
         L1_SIDE, L1_SIDE, 64, 7, 7>
-    (l1_out0, maxpool_out, l11_c1_weight, l11_c1_bias, true);
+    (l1_out0, l1_out1, l11_c1_weight, l11_c1_bias, true);
     tiled_conv
         <L1_DEPTH, L1_DEPTH, 3, 3, 1, 1,
         L1_SIDE, L1_SIDE, 64, 7, 7>
-    (maxpool_out, l1_out0, l11_c2_weight, l11_c2_bias, true, true);
-    WRITE_TO_FILE_NAME(l1_out0, "l11_c1_out", 64, 56, 56);
-    WRITE_TO_FILE_NAME(maxpool_out, "l11_c2_out", 64, 56, 56);
+    (l1_out1, l1_out0, l11_c2_weight, l11_c2_bias, true, true);
+    WRITE_TO_FILE_NAME(l1_out0, "l11_c1_out", L1_DEPTH, L1_SIDE, L1_SIDE);
+    WRITE_TO_FILE_NAME(l1_out1, "l11_c2_out", L1_DEPTH, L1_SIDE, L1_SIDE);
 
     // layer 2
     // downsample
-    fm_t l2_out0[128*28*28];
-    fm_t l2_out1[128*28*28];
+    fm_t *l2_out0 = fm_dram + L2_FM_OFFSET;
+    fm_t *l2_out1 = l2_out0 + L2_SIZE;
     tiled_conv
         <L2_DEPTH, L1_DEPTH, 1, 1, 2, 0,
         L1_SIDE, L1_SIDE, 64, 14, 14>
         (l2_out1, maxpool_out, l2_ds_weight, l2_ds_bias, false);
-    WRITE_TO_FILE_NAME(l2_out1, "l2_ds_out", 128, 28, 28);
+    WRITE_TO_FILE_NAME(l2_out1, "l2_ds_out", L2_DEPTH, L2_SIDE, L2_SIDE);
     // block 0
     tiled_conv
         <L2_DEPTH, L1_DEPTH, 3, 3, 2, 1,
@@ -149,8 +166,8 @@ void resnet18(
         <L2_DEPTH, L2_DEPTH, 3, 3, 1, 1,
         L2_SIDE, L2_SIDE, 64, 7, 7>
         (l2_out1, l2_out0, l20_c2_weight, l20_c2_bias, true, true);
-    WRITE_TO_FILE_NAME(l2_out0, "l20_c1_out", 128, 28, 28);
-    WRITE_TO_FILE_NAME(l2_out1, "l20_c2_out", 128, 28, 28);
+    WRITE_TO_FILE_NAME(l2_out0, "l20_c1_out", L2_DEPTH, L2_SIDE, L2_SIDE);
+    WRITE_TO_FILE_NAME(l2_out1, "l20_c2_out", L2_DEPTH, L2_SIDE, L2_SIDE);
     // block 1
     tiled_conv
         <L2_DEPTH, L2_DEPTH, 3, 3, 1, 1,
@@ -160,18 +177,18 @@ void resnet18(
         <L2_DEPTH, L2_DEPTH, 3, 3, 1, 1,
         L2_SIDE, L2_SIDE, 64, 7, 7>
         (l2_out1, l2_out0, l21_c2_weight, l21_c2_bias, true, true);
-    WRITE_TO_FILE_NAME(l2_out0, "l21_c1_out", 128, 28, 28);
-    WRITE_TO_FILE_NAME(l2_out1, "l21_c2_out", 128, 28, 28);
+    WRITE_TO_FILE_NAME(l2_out0, "l21_c1_out", L2_DEPTH, L2_SIDE, L2_SIDE);
+    WRITE_TO_FILE_NAME(l2_out1, "l21_c2_out", L2_DEPTH, L2_SIDE, L2_SIDE);
 
     // layer 3
-    fm_t l3_out0[256*14*14];
-    fm_t l3_out1[256*14*14];
+    fm_t *l3_out0 = fm_dram + L3_FM_OFFSET;
+    fm_t *l3_out1 = l3_out0 + L3_SIZE;
     // downsample
     tiled_conv
         <L3_DEPTH, L2_DEPTH, 1, 1, 2, 0,
         L2_SIDE, L2_SIDE, 64, 14, 14>
         (l3_out1, l2_out1, l3_ds_weight, l3_ds_bias, false);
-    WRITE_TO_FILE_NAME(l3_out1, "l3_ds_out", 256, 14, 14);
+    WRITE_TO_FILE_NAME(l3_out1, "l3_ds_out", L3_DEPTH, L3_SIDE, L3_SIDE);
     // block 0
     tiled_conv
         <L3_DEPTH, L2_DEPTH, 3, 3, 2, 1,
@@ -181,8 +198,8 @@ void resnet18(
         <L3_DEPTH, L3_DEPTH, 3, 3, 1, 1,
         L3_SIDE, L3_SIDE, 64, 7, 7>
         (l3_out1, l3_out0, l30_c2_weight, l30_c2_bias, true, true);
-    WRITE_TO_FILE_NAME(l3_out0, "l30_c1_out", 256, 14, 14);
-    WRITE_TO_FILE_NAME(l3_out1, "l30_c2_out", 256, 14, 14);
+    WRITE_TO_FILE_NAME(l3_out0, "l30_c1_out", L3_DEPTH, L3_SIDE, L3_SIDE);
+    WRITE_TO_FILE_NAME(l3_out1, "l30_c2_out", L3_DEPTH, L3_SIDE, L3_SIDE);
     // block 1
     tiled_conv
         <L3_DEPTH, L3_DEPTH, 3, 3, 1, 1,
@@ -192,19 +209,19 @@ void resnet18(
         <L3_DEPTH, L3_DEPTH, 3, 3, 1, 1,
         L3_SIDE, L3_SIDE, 64, 7, 7>
         (l3_out1, l3_out0, l31_c2_weight, l31_c2_bias, true, true);
-    WRITE_TO_FILE_NAME(l3_out0, "l31_c1_out", 256, 14, 14);
-    WRITE_TO_FILE_NAME(l3_out1, "l31_c2_out", 256, 14, 14);
+    WRITE_TO_FILE_NAME(l3_out0, "l31_c1_out", L3_DEPTH, L3_SIDE, L3_SIDE);
+    WRITE_TO_FILE_NAME(l3_out1, "l31_c2_out", L3_DEPTH, L3_SIDE, L3_SIDE);
 
 
     // layer 4
-    fm_t l4_out0[512*7*7];
-    fm_t l4_out1[512*7*7];
+    fm_t *l4_out0 = fm_dram + L4_FM_OFFSET;
+    fm_t *l4_out1 = l4_out0 + L4_SIZE;
     // downsample
     tiled_conv
         <L4_DEPTH, L3_DEPTH, 1, 1, 2, 0,
         L3_SIDE, L3_SIDE, 64, 14, 14>
         (l4_out1, l3_out1, l4_ds_weight, l4_ds_bias, false);
-    WRITE_TO_FILE_NAME(l4_out1, "l4_ds_out", 512, 7, 7);
+    WRITE_TO_FILE_NAME(l4_out1, "l4_ds_out", L4_DEPTH, L4_SIDE, L4_SIDE);
     // block 0
     tiled_conv
         <L4_DEPTH, L3_DEPTH, 3, 3, 2, 1,
@@ -214,8 +231,8 @@ void resnet18(
         <L4_DEPTH, L4_DEPTH, 3, 3, 1, 1,
         L4_SIDE, L4_SIDE, 64, 7, 7>
         (l4_out1, l4_out0, l40_c2_weight, l40_c2_bias, true, true);
-    WRITE_TO_FILE_NAME(l4_out0, "l40_c1_out", 512, 7, 7);
-    WRITE_TO_FILE_NAME(l4_out1, "l40_c2_out", 512, 7, 7);
+    WRITE_TO_FILE_NAME(l4_out0, "l40_c1_out", L4_DEPTH, L4_SIDE, L4_SIDE);
+    WRITE_TO_FILE_NAME(l4_out1, "l40_c2_out", L4_DEPTH, L4_SIDE, L4_SIDE);
     // block 1
     tiled_conv
         <L4_DEPTH, L4_DEPTH, 3, 3, 1, 1,
@@ -225,17 +242,17 @@ void resnet18(
         <L4_DEPTH, L4_DEPTH, 3, 3, 1, 1,
         L4_SIDE, L4_SIDE, 64, 7, 7>
         (l4_out1, l4_out0, l41_c2_weight, l41_c2_bias, true, true);
-    WRITE_TO_FILE_NAME(l4_out0, "l41_c1_out", 512, 7, 7);
-    WRITE_TO_FILE_NAME(l4_out1, "l41_c2_out", 512, 7, 7);
+    WRITE_TO_FILE_NAME(l4_out0, "l41_c1_out", L4_DEPTH, L4_SIDE, L4_SIDE);
+    WRITE_TO_FILE_NAME(l4_out1, "l41_c2_out", L4_DEPTH, L4_SIDE, L4_SIDE);
 
 
     // avgpool
-    fm_t avgpool_out[512];
-    avg_pool<512, 7, 7>((fm_t (*)[7][7])l4_out1, avgpool_out);
-    WRITE_TO_FILE(avgpool_out, 512, 1, 1);
+    fm_t *avgpool_out = fm_dram + AVG_POOL_OFFSET;
+    avg_pool<L4_DEPTH, 7, 7>((fm_t (*)[7][7])l4_out1, avgpool_out);
+    WRITE_TO_FILE(avgpool_out, AVG_POOL_SIZE, 1, 1);
 
     
     // fc
-    linear_fc<512, 1000>(avgpool_out, output, fc_weight, fc_bias);
+    linear_fc<L4_DEPTH, OUTPUT_SIZE>(avgpool_out, output, fc_weight, fc_bias);
     WRITE_TO_FILE(output, 1000, 1, 1);
 }

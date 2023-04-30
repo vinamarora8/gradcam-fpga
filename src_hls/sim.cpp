@@ -6,10 +6,10 @@
 
 #define CSIM_DEBUG
 
+#include "resnet18.cpp"
 #include "util.h"
 #include "sim_util.h"
 #include "conv.h"
-#include "resnet18.cpp"
 
 // Floating point precision arrays
 float input[3][224][224];
@@ -166,10 +166,12 @@ int main(int argc, char *argv[])
 {
 
     load_from_files();
+    static fm_t fm_dram[FM_DRAM_SIZE];
  
     resnet18(
         fixp_input,
         fixp_output,
+        fm_dram,
         fixp_conv1_weight,
         fixp_conv1_bias,
         fixp_l10_c1_weight,
