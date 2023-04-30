@@ -65,10 +65,12 @@ void load_layer_params_from_DRAM (
     wt_t bias_buf[OUT_BUF_DEPTH],
     const wt_t weights[OUT_FM_DEPTH][IN_FM_DEPTH][KERNEL_HEIGHT][KERNEL_WIDTH],
     const wt_t bias[OUT_FM_DEPTH],
-    const int kernel_group
+    const int tk,
+    const int tl
 )
 {
-    const int kernel_offset  = kernel_group * OUT_BUF_DEPTH;
+    const int kernel_offset  = tk * OUT_BUF_DEPTH;
+    const int inp_depth_offset = tl * IN_BUF_DEPTH;
 
     WEIGHT_KERNEL_NUM:
     for(int f = 0; f < OUT_BUF_DEPTH; f++)
@@ -77,12 +79,12 @@ void load_layer_params_from_DRAM (
         for(int c = 0; c < IN_BUF_DEPTH; c++)
         {
             WEIGHT_KERNEL_HEIGHT:
-            for(int kh = 0; kh < 7; kh++)
+            for(int kh = 0; kh < KERNEL_HEIGHT; kh++)
 	        {
                 WEIGHT_KERNEL_WIDTH:
-	            for(int kw = 0; kw < 7; kw++)
+	            for(int kw = 0; kw < KERNEL_WIDTH; kw++)
 	            {
-	                weight_buf[f][c][kh][kw] = weights[kernel_offset + f][c][kh][kw];
+	                weight_buf[f][c][kh][kw] = weights[kernel_offset + f][inp_depth_offset + c][kh][kw];
                 }
             }
         }
