@@ -25,6 +25,6 @@ csynth_design
 #cosim_design
 
 # Export IP to Vivado
-export_design -format ip_catalog
+#export_design -format ip_catalog
 
 exit
