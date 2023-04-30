@@ -11,6 +11,7 @@ void load_fm_tile_block_from_DRAM (
     const int tk
 )
 {
+    #pragma HLS inline
     const int depth_offset = tk * TILE_DEPTH;
     const int height_offset = ti * TILE_HEIGHT;
     const int width_offset  = tj * TILE_WIDTH;
@@ -72,7 +73,7 @@ void load_layer_params_from_DRAM (
     const int tl
 )
 {
-
+    #pragma HLS inline
     const int kernel_offset  = tk * OUT_BUF_DEPTH;
     const int tile_layer_offset = tl * IN_BUF_DEPTH;
 
@@ -125,29 +126,27 @@ void store_output_tile_to_DRAM (
     const fm_dims_s out_fm_dims,
     const int  ti,
     const int  tj,
-    int &idx_d,
-    const bool relu
+    const int  tk,
+    const bool relu,
+    const int  WxH
 )
 {
+    #pragma HLS inline
     const int OUT_FM_DEPTH = out_fm_dims.depth;
     const int OUT_FM_HEIGHT = out_fm_dims.height;
     const int OUT_FM_WIDTH = out_fm_dims.width;
 
-    //const dim_t depth_offset  = kernel_group * OUT_BUF_DEPTH;
-    const dim_t height_offset = ti * OUT_BUF_HEIGHT;
-    const dim_t width_offset  = tj * OUT_BUF_WIDTH;
-
-    //int idx_d = (depth_offset)*OUT_FM_WIDTH*OUT_FM_HEIGHT;
+    int idx_d = tk * OUT_BUF_DEPTH * WxH;
     OUTPUT_BUFFER_DEPTH:
     for(int f = 0; f < OUT_BUF_DEPTH; f++)
     {
         #pragma HLS PIPELINE off
-        int idx_h = (height_offset)*OUT_FM_WIDTH;
+        int idx_h = ti * OUT_BUF_HEIGHT * OUT_FM_WIDTH;
         OUTPUT_BUFFER_HEIGHT:
         for(int i = 0; i < OUT_BUF_HEIGHT; i++)
         {
             #pragma HLS PIPELINE off
-            int idx_w = width_offset;
+            int idx_w = tj * OUT_BUF_WIDTH;
             OUTPUT_BUFFER_WIDTH:
             for(int j = 0; j < OUT_BUF_WIDTH; j++)
             {
@@ -164,9 +163,9 @@ void store_output_tile_to_DRAM (
                     out_fm[idx] = out_fm_buf[f][i][j];
                 }
                 idx_w++;
-            }
+             }
             idx_h += OUT_FM_WIDTH;
         }
-        idx_d += OUT_FM_WIDTH*OUT_FM_HEIGHT;
+        idx_d += WxH;
     }
 }

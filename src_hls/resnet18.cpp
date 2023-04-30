@@ -124,6 +124,54 @@ void resnet18(
         wt_t fc_bias[1000]
         )
 {
+
+    #pragma HLS INTERFACE m_axi depth=1  port=input   bundle=fm
+    #pragma HLS INTERFACE m_axi depth=1  port=output  bundle=fm
+    #pragma HLS INTERFACE m_axi depth=1  port=fm_dram bundle=fm
+    #pragma HLS INTERFACE m_axi depth=1  port=conv1_weight bundle=wt
+    #pragma HLS INTERFACE m_axi depth=1  port=conv1_bias bundle=wt
+    #pragma HLS INTERFACE m_axi depth=1  port=l10_c1_weight   bundle=wt
+    #pragma HLS INTERFACE m_axi depth=1  port=l10_c1_bias   bundle=wt
+    #pragma HLS INTERFACE m_axi depth=1  port=l10_c2_weight   bundle=wt
+    #pragma HLS INTERFACE m_axi depth=1  port=l10_c2_bias   bundle=wt
+    #pragma HLS INTERFACE m_axi depth=1  port=l11_c1_weight   bundle=wt
+    #pragma HLS INTERFACE m_axi depth=1  port=l11_c1_bias   bundle=wt
+    #pragma HLS INTERFACE m_axi depth=1  port=l11_c2_weight   bundle=wt
+    #pragma HLS INTERFACE m_axi depth=1  port=l11_c2_bias   bundle=wt
+    #pragma HLS INTERFACE m_axi depth=1  port=l2_ds_weight   bundle=wt
+    #pragma HLS INTERFACE m_axi depth=1  port=l2_ds_bias   bundle=wt
+    #pragma HLS INTERFACE m_axi depth=1  port=l20_c1_weight   bundle=wt
+    #pragma HLS INTERFACE m_axi depth=1  port=l20_c1_bias   bundle=wt
+    #pragma HLS INTERFACE m_axi depth=1  port=l20_c2_weight   bundle=wt
+    #pragma HLS INTERFACE m_axi depth=1  port=l20_c2_bias   bundle=wt
+    #pragma HLS INTERFACE m_axi depth=1  port=l21_c1_weight   bundle=wt
+    #pragma HLS INTERFACE m_axi depth=1  port=l21_c1_bias   bundle=wt
+    #pragma HLS INTERFACE m_axi depth=1  port=l21_c2_weight   bundle=wt
+    #pragma HLS INTERFACE m_axi depth=1  port=l21_c2_bias   bundle=wt
+    #pragma HLS INTERFACE m_axi depth=1  port=l3_ds_weight   bundle=wt
+    #pragma HLS INTERFACE m_axi depth=1  port=l3_ds_bias   bundle=wt
+    #pragma HLS INTERFACE m_axi depth=1  port=l30_c1_weight   bundle=wt
+    #pragma HLS INTERFACE m_axi depth=1  port=l30_c1_bias   bundle=wt
+    #pragma HLS INTERFACE m_axi depth=1  port=l30_c2_weight   bundle=wt
+    #pragma HLS INTERFACE m_axi depth=1  port=l30_c2_bias   bundle=wt
+    #pragma HLS INTERFACE m_axi depth=1  port=l31_c1_weight   bundle=wt
+    #pragma HLS INTERFACE m_axi depth=1  port=l31_c1_bias   bundle=wt
+    #pragma HLS INTERFACE m_axi depth=1  port=l31_c2_weight   bundle=wt
+    #pragma HLS INTERFACE m_axi depth=1  port=l31_c2_bias   bundle=wt
+    #pragma HLS INTERFACE m_axi depth=1  port=l4_ds_weight   bundle=wt
+    #pragma HLS INTERFACE m_axi depth=1  port=l4_ds_bias   bundle=wt
+    #pragma HLS INTERFACE m_axi depth=1  port=l40_c1_weight   bundle=wt
+    #pragma HLS INTERFACE m_axi depth=1  port=l40_c1_bias   bundle=wt
+    #pragma HLS INTERFACE m_axi depth=1  port=l40_c2_weight   bundle=wt
+    #pragma HLS INTERFACE m_axi depth=1  port=l40_c2_bias   bundle=wt
+    #pragma HLS INTERFACE m_axi depth=1  port=l41_c1_weight   bundle=wt
+    #pragma HLS INTERFACE m_axi depth=1  port=l41_c1_bias   bundle=wt
+    #pragma HLS INTERFACE m_axi depth=1  port=l41_c2_weight   bundle=wt
+    #pragma HLS INTERFACE m_axi depth=1  port=l41_c2_bias   bundle=wt
+    #pragma HLS INTERFACE m_axi depth=1  port=fc_weight   bundle=wt
+    #pragma HLS INTERFACE m_axi depth=1  port=fc_bias   bundle=wt
+
+    #pragma HLS INTERFACE s_axilite register	port=return
     
     WRITE_TO_FILE(input, INP_DEPTH, INP_SIDE, INP_SIDE);
 

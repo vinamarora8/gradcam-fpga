@@ -20,9 +20,11 @@ void tiled_conv_core (
     const int IN_FM_DEPTH,
     const int IN_FM_HEIGHT,
     const int IN_FM_WIDTH,
+    const int IN_FM_WIDTH_x_HEIGHT,
     const int OUT_FM_DEPTH,
     const int OUT_FM_HEIGHT,
     const int OUT_FM_WIDTH,
+    const int OUT_FM_WIDTH_x_HEIGHT,
     const bool relu,
     const bool inplace_residual = false
 )
@@ -51,11 +53,13 @@ void tiled_conv_core (
     //--------------------------------------------------------------------------
     // Defines interface IO ports for HLS.
     //--------------------------------------------------------------------------
+    /*
     #pragma HLS INTERFACE m_axi depth=1  port=input_feature_map   bundle=fm
     #pragma HLS INTERFACE m_axi depth=1  port=layer_weights       bundle=wt
     #pragma HLS INTERFACE m_axi depth=1  port=layer_bias          bundle=wt
     #pragma HLS INTERFACE m_axi depth=1  port=output_feature_map  bundle=fm
     #pragma HLS INTERFACE s_axilite register	port=return
+    */
 
     //--------------------------------------------------------------------------
     // On-chip buffers
@@ -110,7 +114,7 @@ void tiled_conv_core (
                 store_output_tile_to_DRAM
                     <OUT_BUF_DEPTH, OUT_BUF_HEIGHT, OUT_BUF_WIDTH>
                     (output_feature_map, conv_out_buf, out_fm_dims, ti, tj, 
-                     store_out_idx_dm, relu);
+                     tk, relu, OUT_FM_WIDTH_x_HEIGHT);
 
             }
         }
@@ -132,6 +136,7 @@ inline void tiled_conv (
     const bool inplace_residual = false
 )
 { 
+    #pragma HLS inline
 
     static_assert(IN_FM_DEPTH >= IN_BUF_DEPTH, "IN_FM_WIDTH >= IN_BUF_DEPTH");
 
@@ -156,9 +161,11 @@ inline void tiled_conv (
         IN_FM_DEPTH,
         IN_FM_HEIGHT,
         IN_FM_WIDTH,
+        IN_FM_WIDTH * IN_FM_HEIGHT,
         OUT_FM_DEPTH,
         OUT_FM_HEIGHT,
         OUT_FM_WIDTH,
+        OUT_FM_WIDTH * OUT_FM_HEIGHT,
         relu,
         inplace_residual
         );
