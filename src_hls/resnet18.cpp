@@ -7,6 +7,29 @@
 #include "sim_util.h"
 #include "residual.cpp"
 
+#ifdef CSIM_DEBUG
+std::string root_dir = "out/";
+#define WRITE_TO_FILE(var, dim0, dim1, dim2) \
+{ \
+    std::vector<int> dims(3); \
+    dims[0] = dim0; \
+    dims[1] = dim1; \
+    dims[2] = dim2; \
+    write_to_file(root_dir + VAR_NAME(var) + ".bin", dims, var); \
+}
+#define WRITE_TO_FILE_NAME(var, name, dim0, dim1, dim2) \
+{ \
+    std::vector<int> dims(3); \
+    dims[0] = dim0; \
+    dims[1] = dim1; \
+    dims[2] = dim2; \
+    write_to_file(root_dir + name + ".bin", dims, var); \
+}
+#else
+#define WRITE_TO_FILE(var, dim0, dim1, dim2)
+#define WRITE_TO_FILE_NAME(var, name, dim0, dim1, dim2)
+#endif
+
 #define INP_SIDE 224
 #define INP_DEPTH 3
 
