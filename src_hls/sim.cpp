@@ -4,8 +4,6 @@
 #include <string>
 #include <vector>
 
-#define CSIM_DEBUG
-
 #include "resnet18.cpp"
 #include "util.h"
 #include "sim_util.h"

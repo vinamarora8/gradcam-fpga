@@ -4,7 +4,6 @@ open_project proj
 set_top resnet18
 
 # this is your file that to be synthesized as FPGA design
-# TODO
 add_files resnet18.cpp
 
 # this is your testbench (specified by -tb option)

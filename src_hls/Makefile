@@ -13,8 +13,9 @@ ALLOUT+= sim
 all: IFLAG +=  -g -DCSIM_DEBUG
 all: $(ALLOUT) 
 
-sim : sim.cpp
-	$(CC) $(CFLAG) -c $< -o $@
+.PHONY: sim
+sim : 
+	g++ -DCSIM_DEBUG sim.cpp conv1/tiled_conv.cpp
 
 clean:
 	rm -f -r csim.d 
