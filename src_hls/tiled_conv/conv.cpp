@@ -9,7 +9,8 @@ void conv_small (
     fm_t Y_buf[OUT_BUF_DEPTH][OUT_BUF_HEIGHT][OUT_BUF_WIDTH],
     const fm_t X_buf[IN_BUF_DEPTH][IN_BUF_HEIGHT][IN_BUF_WIDTH],
     const wt_t W_buf[OUT_BUF_DEPTH][IN_BUF_DEPTH][KERNEL_HEIGHT][KERNEL_WIDTH],
-    const wt_t B_buf[OUT_BUF_DEPTH]
+    const wt_t B_buf[OUT_BUF_DEPTH],
+    const bool add_to_output = false
 )
 {
     const int S = STRIDE;
@@ -29,7 +30,10 @@ OUT_FEAT:
                         {
                             if (id == 0 && kh == 0 && kw == 0)
                             {
-                                Y_buf[of][oh][ow] += B_buf[of];
+                                if (add_to_output)
+                                    Y_buf[of][oh][ow] += B_buf[of];
+                                else
+                                    Y_buf[of][oh][ow] = B_buf[of];
                             }
 
                             int i = S*oh + kh;

@@ -83,18 +83,9 @@ void tiled_conv (
             {
 
                 if (inplace_residual)
-                {
                     load_fm_tile_block_from_DRAM
                         <OUT_BUF_DEPTH, OUT_BUF_HEIGHT, OUT_BUF_WIDTH, 0>
                         (conv_out_buf, output_feature_map, out_fm_dims, ti, tj, tk);
-                }
-                else
-                {
-                    for (int f = 0; f < OUT_BUF_DEPTH; f++)
-                        for (int i = 0; i < OUT_BUF_HEIGHT; i++)
-                            for (int j = 0; j < OUT_BUF_WIDTH; j++)
-                                conv_out_buf[f][i][j] = (fm_t) 0;
-                }
 
                 load_layer_params_from_DRAM
                     <OUT_BUF_DEPTH, IN_BUF_DEPTH, KERNEL_HEIGHT, KERNEL_WIDTH,
@@ -105,7 +96,7 @@ void tiled_conv (
                     <OUT_BUF_DEPTH, OUT_BUF_HEIGHT, OUT_BUF_WIDTH,
                     IN_BUF_DEPTH, IN_BUF_HEIGHT, IN_BUF_WIDTH,
                     KERNEL_HEIGHT, KERNEL_WIDTH, STRIDE>
-                    (conv_out_buf, conv_in_buf, conv_wt_buf, conv_bias_buf);
+                    (conv_out_buf, conv_in_buf, conv_wt_buf, conv_bias_buf, inplace_residual);
 
                 store_output_tile_to_DRAM
                     <OUT_BUF_DEPTH, OUT_BUF_HEIGHT, OUT_BUF_WIDTH>
