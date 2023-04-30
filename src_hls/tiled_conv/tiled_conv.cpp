@@ -92,9 +92,9 @@ void tiled_conv (
                         (conv_in_buf, input_feature_map, in_fm_dims, ti, tj, tl);
 
                     load_layer_params_from_DRAM
-                        <OUT_BUF_DEPTH, IN_BUF_DEPTH, KERNEL_HEIGHT, KERNEL_WIDTH,
-                        OUT_FM_DEPTH, IN_FM_DEPTH>
-                        (conv_wt_buf, conv_bias_buf, layer_weights, layer_bias, tk, tl);
+                        <OUT_BUF_DEPTH, IN_BUF_DEPTH, KERNEL_HEIGHT, KERNEL_WIDTH>
+                        (conv_wt_buf, conv_bias_buf, (fm_t *) layer_weights, layer_bias, 
+                         OUT_FM_DEPTH, IN_FM_DEPTH, tk, tl);
 
                     bool residual = inplace_residual || (tl != 0);
                     conv_small

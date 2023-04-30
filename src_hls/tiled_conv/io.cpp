@@ -58,13 +58,14 @@ void load_fm_tile_block_from_DRAM (
 }
 
 
-template<int OUT_BUF_DEPTH, int IN_BUF_DEPTH, int KERNEL_HEIGHT, int KERNEL_WIDTH,
-         int OUT_FM_DEPTH, int IN_FM_DEPTH>
+template<int OUT_BUF_DEPTH, int IN_BUF_DEPTH, int KERNEL_HEIGHT, int KERNEL_WIDTH>
 void load_layer_params_from_DRAM (
     wt_t weight_buf[OUT_BUF_DEPTH][IN_BUF_DEPTH][KERNEL_HEIGHT][KERNEL_WIDTH],
     wt_t bias_buf[OUT_BUF_DEPTH],
-    const wt_t weights[OUT_FM_DEPTH][IN_FM_DEPTH][KERNEL_HEIGHT][KERNEL_WIDTH],
-    const wt_t bias[OUT_FM_DEPTH],
+    const wt_t weights[],
+    const wt_t bias[],
+    const dim_t OUT_FM_DEPTH,
+    const dim_t IN_FM_DEPTH,
     const int tk,
     const int tl
 )
@@ -72,22 +73,31 @@ void load_layer_params_from_DRAM (
     const int kernel_offset  = tk * OUT_BUF_DEPTH;
     const int tile_layer_offset = tl * IN_BUF_DEPTH;
 
+    int idx_f = kernel_offset*IN_FM_DEPTH*KERNEL_HEIGHT*KERNEL_WIDTH;
     WEIGHT_KERNEL_NUM:
     for(int f = 0; f < OUT_BUF_DEPTH; f++)
     {
+        int idx_c = tile_layer_offset*KERNEL_HEIGHT*KERNEL_WIDTH;
         WEIGHT_KERNEL_DEPTH:
         for(int c = 0; c < IN_BUF_DEPTH; c++)
         {
+            int idx_kh = 0;
             WEIGHT_KERNEL_HEIGHT:
             for(int kh = 0; kh < KERNEL_HEIGHT; kh++)
 	        {
+                int idx_kw = 0;
                 WEIGHT_KERNEL_WIDTH:
 	            for(int kw = 0; kw < KERNEL_WIDTH; kw++)
 	            {
-	                weight_buf[f][c][kh][kw] = weights[kernel_offset + f][tile_layer_offset + c][kh][kw];
+	                //weight_buf[f][c][kh][kw] = weights[kernel_offset + f][tile_layer_offset + c][kh][kw];
+                    weight_buf[f][c][kh][kw] = weights[idx_f + idx_c + idx_kh + idx_kw];
+                    idx_kw++;
                 }
+                idx_kh += KERNEL_WIDTH;
             }
+            idx_c += KERNEL_HEIGHT*KERNEL_WIDTH;
         }
+        idx_f += IN_FM_DEPTH*KERNEL_HEIGHT*KERNEL_WIDTH;
     }
 
     BIAS:
