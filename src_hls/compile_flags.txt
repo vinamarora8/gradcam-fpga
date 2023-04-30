@@ -1,0 +1,1 @@
+-DCSIM_DEBUG
