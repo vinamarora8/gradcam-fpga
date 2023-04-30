@@ -72,7 +72,7 @@ std::string root_dir = "out/";
 #define FM_DRAM_SIZE (OUTPUT_OFFSET + OUTPUT_SIZE)
 
 void resnet18(
-        fm_t input[3][224][224],
+        fm_t input[INP_DEPTH][INP_SIDE][INP_SIDE],
         fm_t output[1000],
         fm_t fm_dram[],
         wt_t conv1_weight[64][3][7][7],
@@ -125,7 +125,7 @@ void resnet18(
         )
 {
     
-    WRITE_TO_FILE(input, 3, 224, 224);
+    WRITE_TO_FILE(input, INP_DEPTH, INP_SIDE, INP_SIDE);
 
     fm_t *conv1_out = fm_dram;
     fm_t *maxpool_out = fm_dram + MAXPOOL_FM_OFFSET;
@@ -141,17 +141,18 @@ void resnet18(
 
     // conv1
     tiled_conv
-        <64, 3, 7, 7, 2, 3,
-        224, 224, 64, 3, 32, 32>
+        <CONV1_DEPTH, 3, 7, 7, 2, 3,
+        INP_SIDE, INP_SIDE, 64, 3, 32, 32>
         (conv1_out, (fm_t *) input, conv1_weight, conv1_bias, true);
-    WRITE_TO_FILE(conv1_out, 64, 112, 112);
+    WRITE_TO_FILE(conv1_out, CONV1_DEPTH, CONV1_SIDE, CONV1_SIDE);
 
 
     // maxpool
-    maxpool2d<64, 112, 112, 
-            64, 56, 56, 
-            3, 3, 2, 1>((fm_t (*)[56][56])maxpool_out, (fm_t (*)[112][112])conv1_out);
-    WRITE_TO_FILE(maxpool_out, 64, 56, 56);
+    maxpool2d<CONV1_DEPTH, CONV1_SIDE, CONV1_SIDE, 
+            MAXPOOL_DEPTH, MAXPOOL_SIDE, MAXPOOL_SIDE, 
+            3, 3, 2, 1>((fm_t (*)[MAXPOOL_SIDE][MAXPOOL_SIDE])maxpool_out, 
+                        (fm_t (*)[CONV1_SIDE][CONV1_SIDE])conv1_out);
+    WRITE_TO_FILE(maxpool_out, MAXPOOL_DEPTH, MAXPOOL_SIDE, MAXPOOL_SIDE);
 
     // layer 1 
     // block 0
