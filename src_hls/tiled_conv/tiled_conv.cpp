@@ -84,7 +84,6 @@ void tiled_conv_core (
         TILE_COL:
         for(int tj = 0; tj < N_TILE_COLS; tj++)
         {
-            int store_out_idx_dm = 0;
             KERNEL_GRP:
             for (int tk = 0; tk < KERNEL_GRPS; tk++)
             {
@@ -118,8 +117,7 @@ void tiled_conv_core (
 
                 store_output_tile_to_DRAM
                     <OUT_BUF_DEPTH, OUT_BUF_HEIGHT, OUT_BUF_WIDTH>
-                    (output_feature_map, conv_out_buf, out_fm_dims, ti, tj, 
-                     store_out_idx_dm, relu);
+                    (output_feature_map, conv_out_buf, out_fm_dims, ti, tj, tk, relu);
 
             }
         }
