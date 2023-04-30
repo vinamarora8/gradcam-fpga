@@ -105,7 +105,7 @@ void tiled_conv (
                 store_output_tile_to_DRAM
                     <OUT_BUF_DEPTH, OUT_BUF_HEIGHT, OUT_BUF_WIDTH,
                     OUT_FM_DEPTH, OUT_FM_HEIGHT, OUT_FM_WIDTH>
-                    (output_feature_map, conv_out_buf, ti, tj, tk, relu);
+                    (output_feature_map[0][0], conv_out_buf, ti, tj, tk, relu);
 
             }
         }

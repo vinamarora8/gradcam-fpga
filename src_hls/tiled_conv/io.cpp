@@ -97,7 +97,7 @@ void load_layer_params_from_DRAM (
 template<int OUT_BUF_DEPTH, int OUT_BUF_HEIGHT, int OUT_BUF_WIDTH,
          int OUT_FM_DEPTH, int OUT_FM_HEIGHT, int OUT_FM_WIDTH>
 void store_output_tile_to_DRAM (
-    fm_t out_fm[OUT_FM_DEPTH][OUT_FM_HEIGHT][OUT_FM_WIDTH],
+    fm_t out_fm[],
     const fm_t out_fm_buf[OUT_BUF_DEPTH][OUT_BUF_HEIGHT][OUT_BUF_WIDTH],
     const int  ti,
     const int  tj,
@@ -109,26 +109,33 @@ void store_output_tile_to_DRAM (
     const int height_offset = ti * OUT_BUF_HEIGHT;
     const int width_offset  = tj * OUT_BUF_WIDTH;
 
+    int idx_d = (depth_offset)*OUT_FM_WIDTH*OUT_FM_HEIGHT;
     OUTPUT_BUFFER_DEPTH:
     for(int f = 0; f < OUT_BUF_DEPTH; f++)
     {
+        int idx_h = (height_offset)*OUT_FM_WIDTH;
         OUTPUT_BUFFER_HEIGHT:
         for(int i = 0; i < OUT_BUF_HEIGHT; i++)
         {
+            int idx_w = width_offset;
             OUTPUT_BUFFER_WIDTH:
             for(int j = 0; j < OUT_BUF_WIDTH; j++)
             {
+                int idx = idx_w + idx_h + idx_d;
+
                 // ReLU in-place
                 if(relu & (out_fm_buf[f][i][j] < (fm_t) 0))
                 {
-                    out_fm[depth_offset + f][height_offset + i][width_offset + j] = (fm_t) 0;
+                    out_fm[idx] = (fm_t) 0;
                 }
                 else
                 {
-                    out_fm[depth_offset + f][height_offset + i][width_offset + j] = out_fm_buf[f][i][j];
-                    //out_fm[dram_idx] = out_fm_buf[f][i][j];
+                    out_fm[idx] = out_fm_buf[f][i][j];
                 }
+                idx_w++;
             }
+            idx_h += OUT_FM_WIDTH;
         }
+        idx_d += OUT_FM_WIDTH*OUT_FM_HEIGHT;
     }
 }
