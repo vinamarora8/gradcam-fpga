@@ -11,7 +11,6 @@ void load_fm_tile_block_from_DRAM (
     const int tk
 )
 {
-    #pragma HLS inline off
     const int depth_offset = tk * TILE_DEPTH;
     const int height_offset = ti * TILE_HEIGHT;
     const int width_offset  = tj * TILE_WIDTH;
@@ -73,7 +72,6 @@ void load_layer_params_from_DRAM (
     const int tl
 )
 {
-    #pragma HLS inline off
 
     const int kernel_offset  = tk * OUT_BUF_DEPTH;
     const int tile_layer_offset = tl * IN_BUF_DEPTH;
@@ -131,8 +129,6 @@ void store_output_tile_to_DRAM (
     const bool relu
 )
 {
-    #pragma HLS inline off
-
     const int OUT_FM_DEPTH = out_fm_dims.depth;
     const int OUT_FM_HEIGHT = out_fm_dims.height;
     const int OUT_FM_WIDTH = out_fm_dims.width;

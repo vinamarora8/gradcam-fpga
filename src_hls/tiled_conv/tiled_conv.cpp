@@ -17,41 +17,32 @@ void tiled_conv_core (
     const int N_TILE_LAYERS,
     const int N_TILE_ROWS,
     const int N_TILE_COLS,
+    const int IN_FM_DEPTH,
+    const int IN_FM_HEIGHT,
+    const int IN_FM_WIDTH,
+    const int OUT_FM_DEPTH,
+    const int OUT_FM_HEIGHT,
+    const int OUT_FM_WIDTH,
     const bool relu,
     const bool inplace_residual = false
 )
 {
-    static_assert(STRIDE == 1 || STRIDE == 2, "STRIDE > 2 not implemented");
     static_assert(TILE_HEIGHT % STRIDE == 0, "TILE_HEIGHT must be a multiple of STRIDE");
     static_assert(TILE_WIDTH % STRIDE == 0, "TILE_WIDTH must be a multiple of STRIDE");
 
-    const int IN_FM_DEPTH = IN_BUF_DEPTH * N_TILE_LAYERS;
-    const int IN_FM_HEIGHT = TILE_HEIGHT * N_TILE_ROWS;
-    const int IN_FM_WIDTH = TILE_WIDTH * N_TILE_COLS;
-    const int OUT_FM_DEPTH = OUT_BUF_DEPTH * KERNEL_GRPS;
-    const int OUT_FM_HEIGHT = STRIDE == 1 ? IN_FM_HEIGHT : IN_FM_HEIGHT >> 1;
-    const int OUT_FM_WIDTH = STRIDE == 1 ? IN_FM_WIDTH : IN_FM_WIDTH >> 1;
-
-
+#ifdef CSIM_DEBUG
     assert(IN_FM_HEIGHT % STRIDE == 0);
     assert(IN_FM_WIDTH % STRIDE == 0);
     assert(OUT_FM_DEPTH % OUT_BUF_DEPTH == 0);
     assert(IN_FM_HEIGHT % TILE_HEIGHT == 0);
     assert(IN_FM_WIDTH % TILE_WIDTH == 0);
-
+#endif
 
     const int MARGIN = 2 * PADDING;
     const int IN_BUF_HEIGHT = TILE_HEIGHT + MARGIN;
     const int IN_BUF_WIDTH = TILE_WIDTH + MARGIN;
     const int OUT_BUF_HEIGHT = STRIDE == 1 ? TILE_HEIGHT : TILE_HEIGHT >> 1;
     const int OUT_BUF_WIDTH = STRIDE == 1 ? TILE_WIDTH : TILE_WIDTH >> 1;
-
-    /*
-    const int KERNEL_GRPS = OUT_FM_DEPTH / OUT_BUF_DEPTH;
-    const int N_TILE_ROWS = IN_FM_HEIGHT / TILE_HEIGHT;
-    const int N_TILE_COLS = IN_FM_WIDTH  / TILE_WIDTH;
-    const int N_TILE_LAYERS = IN_FM_DEPTH / IN_BUF_DEPTH;
-    */
 
     const fm_dims_s in_fm_dims = {IN_FM_DEPTH, IN_FM_HEIGHT, IN_FM_WIDTH};
     const fm_dims_s out_fm_dims = {OUT_FM_DEPTH, OUT_FM_HEIGHT, OUT_FM_WIDTH};
@@ -148,6 +139,8 @@ inline void tiled_conv (
     const int N_TILE_ROWS = IN_FM_HEIGHT / TILE_HEIGHT;
     const int N_TILE_COLS = IN_FM_WIDTH  / TILE_WIDTH;
     const int N_TILE_LAYERS = IN_FM_DEPTH / IN_BUF_DEPTH;
+    const int OUT_FM_HEIGHT = IN_FM_HEIGHT / STRIDE;
+    const int OUT_FM_WIDTH = IN_FM_WIDTH / STRIDE;
 
     tiled_conv_core
         <OUT_BUF_DEPTH, IN_BUF_DEPTH, KERNEL_HEIGHT, KERNEL_WIDTH, STRIDE, PADDING,
@@ -160,6 +153,12 @@ inline void tiled_conv (
         N_TILE_LAYERS,
         N_TILE_ROWS,
         N_TILE_COLS,
+        IN_FM_DEPTH,
+        IN_FM_HEIGHT,
+        IN_FM_WIDTH,
+        OUT_FM_DEPTH,
+        OUT_FM_HEIGHT,
+        OUT_FM_WIDTH,
         relu,
         inplace_residual
         );
