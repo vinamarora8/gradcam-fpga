@@ -108,9 +108,12 @@ void store_output_tile_to_DRAM (
             OUTPUT_BUFFER_WIDTH:
             for(int j = 0; j < OUT_BUF_WIDTH; j++)
             {
+                #pragma HLS PIPELINE II=1
                 int idx_d = depth_offset + f;
                 int idx_h = height_offset + i;
                 int idx_w = width_offset + j;
+
+                fm_t out;
                 // ReLU in-place
                 if(relu & (out_fm_buf[f][i][j] < (fm_t) 0))
                 {

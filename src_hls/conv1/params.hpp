@@ -1,6 +1,6 @@
 #pragma once
 
-const int OUT_BUF_DEPTH = 64;
+const int OUT_BUF_DEPTH = 8;
 const int IN_BUF_DEPTH = 3;
 const int KERNEL_HEIGHT = 7;
 const int KERNEL_WIDTH = 7;

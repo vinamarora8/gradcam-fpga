@@ -42,13 +42,14 @@ void tiled_conv(
         TILE_COL:
         for(int tj = 0; tj < N_TILE_COLS; tj++)
         {
+
+            load_fm_tile_block_from_DRAM
+                <IN_BUF_DEPTH, TILE_HEIGHT, TILE_WIDTH, PADDING, IN_FM_DEPTH, IN_FM_HEIGHT, IN_FM_WIDTH>
+                (conv_in_buf, input_feature_map, ti, tj, 0);
+
             KERNEL_GRP:
             for (int tk = 0; tk < KERNEL_GRPS; tk++)
             {
-                load_fm_tile_block_from_DRAM
-                    <IN_BUF_DEPTH, TILE_HEIGHT, TILE_WIDTH, PADDING, IN_FM_DEPTH, IN_FM_HEIGHT, IN_FM_WIDTH>
-                    (conv_in_buf, input_feature_map, ti, tj, 0);
-
                 load_layer_params_from_DRAM(conv_wt_buf, conv_bias_buf, layer_weights, layer_bias, tk);
                 conv_small(conv_out_buf, conv_in_buf, conv_wt_buf, conv_bias_buf);
 

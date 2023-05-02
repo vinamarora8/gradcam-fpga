@@ -13,26 +13,32 @@ void conv_small (
 #pragma HLS INLINE off
     const int S = STRIDE;
 
-OUT_COL:  for (int ow = 0; ow < OUT_BUF_WIDTH; ow++) {
-#pragma HLS PIPELINE off
+    #pragma HLS ARRAY_PARTITION variable=W_buf type=complete dim=1
+    #pragma HLS ARRAY_PARTITION variable=Y_buf type=complete dim=1
+    #pragma HLS ARRAY_PARTITION variable=B_buf type=complete dim=1
+
 IN_FEAT:  for (int id = 0; id < IN_BUF_DEPTH; id++) {
-#pragma HLS PIPELINE off
-IN_ROW:   for (int kh = 0; kh < KERNEL_HEIGHT; kh++) {
-#pragma HLS PIPELINE off
-IN_COL:   for (int kw = 0; kw < KERNEL_WIDTH; kw++)  {
-#pragma HLS PIPELINE off
-OUT_ROW:  for (int oh = 0; oh < OUT_BUF_HEIGHT; oh++) {
-#pragma HLS PIPELINE off
-OUT_FEAT: for (int of = 0; of < OUT_BUF_DEPTH; of++) {
-        #pragma HLS PIPELINE II=1
-        if (id == 0 && kh == 0 && kw == 0)
-        {
-            Y_buf[of][oh][ow] = B_buf[of];
-        }
+    IN_ROW:   for (int kh = 0; kh < KERNEL_HEIGHT; kh++) {
+        IN_COL:   for (int kw = 0; kw < KERNEL_WIDTH; kw++)  {
+            OUT_COL:  for (int ow = 0; ow < OUT_BUF_WIDTH; ow++) {
+                OUT_ROW:  for (int oh = 0; oh < OUT_BUF_HEIGHT; oh++) {
+                            #pragma HLS PIPELINE II=1
+                    OUT_FEAT: for (int of = 0; of < OUT_BUF_DEPTH; of++) { // 16
+                            #pragma HLS unroll
 
-        int i = S*oh + kh;
-        int j = S*ow + kw;
+                            int i = S*oh + kh;
+                            int j = S*ow + kw;
 
-        Y_buf[of][oh][ow] += X_buf[id][i][j] * W_buf[of][id][kh][kw];
-}}}}}}
+                            fm_t x = Y_buf[of][oh][ow];
+
+                            if (id == 0 && kh == 0 && kw == 0)
+                            {
+                                x = B_buf[of] + X_buf[id][i][j] * W_buf[of][id][kh][kw];
+                            }
+                            else
+                            {
+                                x += X_buf[id][i][j] * W_buf[of][id][kh][kw];
+                            }
+                            Y_buf[of][oh][ow] = x;
+                        }}}}}}
 }
