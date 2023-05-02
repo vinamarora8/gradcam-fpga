@@ -7,6 +7,7 @@
 #include "conv1/conv1.hpp"
 #include "conv_ds/conv_ds.hpp"
 #include "conv_3x3_s1/conv_3x3_s1.cpp"
+#include "conv_3x3_s2/conv_3x3_s2.cpp"
 #include "residual.cpp"
 
 #ifdef CSIM_DEBUG
@@ -158,7 +159,7 @@ void resnet18(
     // block 0
     conv_3x3_s1::tiled_conv<L1_DEPTH, MAXPOOL_DEPTH, L1_SIDE, L1_SIDE>(l1_out0, l1_out1, (wt_t *) l10_c1_weight, l10_c1_bias, false);
     conv_3x3_s1::tiled_conv<L1_DEPTH, L1_DEPTH, L1_SIDE, L1_SIDE>(l1_out1, l1_out0, (wt_t *) l10_c2_weight, l10_c2_bias, true);
-   WRITE_TO_FILE_NAME(l1_out0, "l10_c1_out", L1_DEPTH, L1_SIDE, L1_SIDE);
+    WRITE_TO_FILE_NAME(l1_out0, "l10_c1_out", L1_DEPTH, L1_SIDE, L1_SIDE);
     WRITE_TO_FILE_NAME(l1_out1, "l10_c2_out", L1_DEPTH, L1_SIDE, L1_SIDE);
     // block 1
     conv_3x3_s1::tiled_conv<L1_DEPTH, L1_DEPTH, L1_SIDE, L1_SIDE>(l1_out0, l1_out1, (wt_t *) l11_c1_weight, l11_c1_bias, false);
@@ -172,10 +173,7 @@ void resnet18(
         (l2_out1, maxpool_out, (fm_t *)l2_ds_weight, l2_ds_bias);
     WRITE_TO_FILE_NAME(l2_out1, "l2_ds_out", L2_DEPTH, L2_SIDE, L2_SIDE);
     // block 0
-    tiled_conv
-        <L2_DEPTH, L1_DEPTH, 3, 3, 2, 1,
-        L1_SIDE, L1_SIDE, 64, 32, 14, 14>
-        (l2_out0, maxpool_out, l20_c1_weight, l20_c1_bias, true);
+    conv_3x3_s2::tiled_conv<L2_DEPTH, L1_DEPTH, L1_SIDE, L1_SIDE>(l2_out0, maxpool_out, (wt_t *) l20_c1_weight, l20_c1_bias);
     conv_3x3_s1::tiled_conv<L2_DEPTH, L2_DEPTH, L2_SIDE, L2_SIDE>(l2_out1, l2_out0, (wt_t *) l20_c2_weight, l20_c2_bias, true);
     WRITE_TO_FILE_NAME(l2_out0, "l20_c1_out", L2_DEPTH, L2_SIDE, L2_SIDE);
     WRITE_TO_FILE_NAME(l2_out1, "l20_c2_out", L2_DEPTH, L2_SIDE, L2_SIDE);
