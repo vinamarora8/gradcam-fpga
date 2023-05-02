@@ -10,6 +10,17 @@ const int OUT_BUF_DEPTH = 64;
 const int BUF_HEIGHT = 7;
 const int BUF_WIDTH = 7;
 
+void tiled_conv_ds_core(
+    fm_t out_feature_map[],
+    const fm_t in_feature_map[],
+    const wt_t layer_weights[],
+    const wt_t layer_bias[],
+    const int N_TILE_ROWS,
+    const int N_TILE_COLS,
+    const int N_TILE_LAYERS,
+    const int KERNEL_GROUPS
+);
+
 template<int OUT_FM_DEPTH, int IN_FM_DEPTH, int IN_FM_HEIGHT, int IN_FM_WIDTH>
 void tiled_conv_ds(
     fm_t out_feature_map[OUT_FM_DEPTH][IN_FM_HEIGHT/2][IN_FM_WIDTH/2],
@@ -18,12 +29,71 @@ void tiled_conv_ds(
     const wt_t layer_bias[OUT_FM_DEPTH]
 )
 {
-    const int OUT_FM_HEIGHT = IN_FM_HEIGHT / 2;
-    const int OUT_FM_WIDTH = IN_FM_WIDTH / 2;
-    const int N_TILE_ROWS = OUT_FM_HEIGHT / BUF_HEIGHT;
-    const int N_TILE_COLS = OUT_FM_WIDTH / BUF_WIDTH;
+    const int N_TILE_ROWS = IN_FM_HEIGHT / (2 * BUF_HEIGHT);
+    const int N_TILE_COLS = IN_FM_WIDTH / (2 * BUF_WIDTH);
     const int N_TILE_LAYERS = IN_FM_DEPTH / IN_BUF_DEPTH;
     const int KERNEL_GROUPS = OUT_FM_DEPTH / OUT_BUF_DEPTH;
+
+    tiled_conv_ds_core(
+        (fm_t *) out_feature_map,
+        (fm_t *) in_feature_map,
+        (fm_t *) layer_weights,
+        layer_bias,
+        N_TILE_ROWS,
+        N_TILE_COLS,
+        N_TILE_LAYERS,
+        KERNEL_GROUPS
+    );
+}
+
+void conv(
+    fm_t out_buf[OUT_BUF_DEPTH][BUF_HEIGHT][BUF_WIDTH],
+    const fm_t in_buf[IN_BUF_DEPTH][BUF_HEIGHT][BUF_WIDTH],
+    const wt_t wt_buf[OUT_BUF_DEPTH][IN_BUF_DEPTH],
+    const wt_t bias_buf[OUT_BUF_DEPTH],
+    const int tl
+)
+{
+    #pragma HLS inline off
+
+CONV_OUT_D: for (int f = 0; f < OUT_BUF_DEPTH; f++)
+    CONV_IN_D: for (int c = 0; c < IN_BUF_DEPTH; c++)
+        CONV_ROW: for (int i = 0; i < BUF_HEIGHT; i++)
+            CONV_COL: for (int j = 0; j < BUF_WIDTH; j++)
+                {
+                    fm_t x = out_buf[f][i][j];
+                    if (c == 0 && tl == 0)
+                        x = bias_buf[f] + in_buf[c][i][j] * wt_buf[f][c];
+                    else
+                        x += in_buf[c][i][j] * wt_buf[f][c];
+
+                    out_buf[f][i][j] = x;
+                }
+}
+
+void tiled_conv_ds_core(
+    fm_t out_feature_map[],
+    const fm_t in_feature_map[],
+    const wt_t layer_weights[],
+    const wt_t layer_bias[],
+    const int N_TILE_ROWS,
+    const int N_TILE_COLS,
+    const int N_TILE_LAYERS,
+    const int KERNEL_GROUPS
+)
+{
+    #pragma HLS INTERFACE m_axi depth=1  port=in_feature_map   bundle=ds_in
+    #pragma HLS INTERFACE m_axi depth=1  port=layer_weights    bundle=ds_wt
+    #pragma HLS INTERFACE m_axi depth=1  port=layer_bias       bundle=ds_wt
+    #pragma HLS INTERFACE m_axi depth=1  port=out_feature_map  bundle=ds_out
+    #pragma HLS INTERFACE s_axilite register	port=return
+
+    const int IN_FM_DEPTH = IN_BUF_DEPTH * N_TILE_LAYERS;
+    const int IN_FM_WIDTH = 2 * BUF_WIDTH * N_TILE_COLS;
+    const int IN_FM_HEIGHT = 2 * BUF_HEIGHT * N_TILE_ROWS;
+    const int OUT_FM_DEPTH = OUT_BUF_DEPTH * KERNEL_GROUPS;
+    const int OUT_FM_HEIGHT = IN_FM_HEIGHT / 2;
+    const int OUT_FM_WIDTH = IN_FM_WIDTH / 2;
 
     static fm_t in_buf[IN_BUF_DEPTH][BUF_HEIGHT][BUF_WIDTH];
     static fm_t out_buf[OUT_BUF_DEPTH][BUF_HEIGHT][BUF_WIDTH];
@@ -43,41 +113,39 @@ void tiled_conv_ds(
                 for (int tl = 0; tl < N_TILE_LAYERS; tl++)
                 {
                     // Load input tile
-                    for (int c = 0; c < IN_BUF_DEPTH; c++)
-                        for (int i = 0; i < BUF_HEIGHT; i++)
-                            for (int j = 0; j < BUF_WIDTH; j++)
-                                in_buf[c][i][j] = in_feature_map[tl*IN_BUF_DEPTH + c][2*ti*BUF_HEIGHT + 2*i][2*tj*BUF_WIDTH + 2*j];
+                INP_D: for (int c = 0; c < IN_BUF_DEPTH; c++)
+                        INP_R: for (int i = 0; i < BUF_HEIGHT; i++)
+                            INP_C: for (int j = 0; j < BUF_WIDTH; j++)
+                            {
+                                int idx_d = tl*IN_BUF_DEPTH + c;
+                                int idx_h = 2*ti*BUF_HEIGHT + 2*i;
+                                int idx_w = 2*tj*BUF_WIDTH + 2*j;
+                                in_buf[c][i][j] = in_feature_map[idx_d*IN_FM_HEIGHT*IN_FM_WIDTH + idx_h*IN_FM_WIDTH + idx_w];
+                            }
 
                     // Load layer weights
-                    for (int f = 0; f < OUT_BUF_DEPTH; f++)
-                        for (int c = 0; c < IN_BUF_DEPTH; c++)
-                            wt_buf[f][c] = layer_weights[tk*OUT_BUF_DEPTH + f][tl*IN_BUF_DEPTH + c];
+                KER_OUT: for (int f = 0; f < OUT_BUF_DEPTH; f++)
+                        KER_IN: for (int c = 0; c < IN_BUF_DEPTH; c++)
+                            wt_buf[f][c] = layer_weights[(tk*OUT_BUF_DEPTH + f)*IN_FM_DEPTH + tl*IN_BUF_DEPTH + c];
 
                     // Load layer bias
-                    for (int f = 0; f < OUT_BUF_DEPTH; f++)
+                BIAS: for (int f = 0; f < OUT_BUF_DEPTH; f++)
                         bias_buf[f] = layer_bias[tk*OUT_BUF_DEPTH + f];
 
                     // Compute
-                    for (int f = 0; f < OUT_BUF_DEPTH; f++)
-                        for (int c = 0; c < IN_BUF_DEPTH; c++)
-                            for (int i = 0; i < BUF_HEIGHT; i++)
-                                for (int j = 0; j < BUF_WIDTH; j++)
-                                {
-                                    fm_t x = out_buf[f][i][j];
-                                    if (c == 0 && tl == 0)
-                                        x = bias_buf[f] + in_buf[c][i][j] * wt_buf[f][c];
-                                    else
-                                        x += in_buf[c][i][j] * wt_buf[f][c];
-
-                                    out_buf[f][i][j] = x;
-                                }
+                     conv_ds::conv(out_buf, in_buf, wt_buf, bias_buf, tl);
                 }
 
                 // Store output tile
-                for (int f = 0; f < OUT_BUF_DEPTH; f++)
-                    for (int i = 0; i < BUF_HEIGHT; i++)
-                        for (int j = 0; j < BUF_WIDTH; j++)
-                            out_feature_map[tk*OUT_BUF_DEPTH + f][ti*BUF_HEIGHT + i][tj*BUF_WIDTH + j] = out_buf[f][i][j];
+            OUT_D: for (int f = 0; f < OUT_BUF_DEPTH; f++)
+                    OUT_R: for (int i = 0; i < BUF_HEIGHT; i++)
+                        OUT_C: for (int j = 0; j < BUF_WIDTH; j++)
+                        {
+                            int idx_d = tk*OUT_BUF_DEPTH + f;
+                            int idx_h = ti*BUF_HEIGHT + i;
+                            int idx_w = tj*BUF_WIDTH + j;
+                            out_feature_map[idx_d*OUT_FM_HEIGHT*OUT_FM_WIDTH + idx_h*OUT_FM_WIDTH + idx_w] = out_buf[f][i][j];
+                        }
             }
             
         }
