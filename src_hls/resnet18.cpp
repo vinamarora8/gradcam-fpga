@@ -147,11 +147,13 @@ void resnet18(
     WRITE_TO_FILE(conv1_out, CONV1_DEPTH, CONV1_SIDE, CONV1_SIDE);
 
     // maxpool
+    #ifdef CSIM_DEBUG
     maxpool2d<CONV1_DEPTH, CONV1_SIDE, CONV1_SIDE, 
             MAXPOOL_DEPTH, MAXPOOL_SIDE, MAXPOOL_SIDE, 
             3, 3, 2, 1>((fm_t (*)[MAXPOOL_SIDE][MAXPOOL_SIDE])maxpool_out, 
                         (fm_t (*)[CONV1_SIDE][CONV1_SIDE])conv1_out);
     WRITE_TO_FILE(maxpool_out, MAXPOOL_DEPTH, MAXPOOL_SIDE, MAXPOOL_SIDE);
+    #endif
 
     // layer 1 
     // block 0
@@ -213,10 +215,12 @@ void resnet18(
     WRITE_TO_FILE_NAME(l4_out1, "l41_c2_out", L4_DEPTH, L4_SIDE, L4_SIDE);
 
     // avgpool
+    #ifdef CSIM_DEBUG
     avg_pool<L4_DEPTH, 7, 7>((fm_t (*)[7][7])l4_out1, avgpool_out);
     WRITE_TO_FILE(avgpool_out, AVG_POOL_SIZE, 1, 1);
     
     // fc
     linear_fc<L4_DEPTH, OUTPUT_SIZE>(avgpool_out, output, fc_weight, fc_bias);
     WRITE_TO_FILE(output, 1000, 1, 1);
+    #endif
 }

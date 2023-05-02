@@ -117,12 +117,14 @@ void store_output_tile_to_DRAM (
                 // ReLU in-place
                 if(relu & (out_fm_buf[f][i][j] < (fm_t) 0))
                 {
-                    out_fm[idx_d][idx_h][idx_w] = (fm_t) 0;
+                    out = (fm_t) 0;
                 }
                 else
                 {
-                    out_fm[idx_d][idx_h][idx_w] = out_fm_buf[f][i][j];
+                    out = out_fm_buf[f][i][j];
                 }
+
+                out_fm[idx_d][idx_h][idx_w] = out;
             }
         }
     }
