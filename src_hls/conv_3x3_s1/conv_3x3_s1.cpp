@@ -17,7 +17,6 @@ void tiled_conv_core (
     const int N_TILE_LAYERS,
     const int N_TILE_ROWS,
     const int N_TILE_COLS,
-    const bool relu,
     const bool inplace_residual = false
 )
 {
@@ -53,17 +52,8 @@ void tiled_conv_core (
     const int OUT_BUF_HEIGHT = STRIDE == 1 ? TILE_HEIGHT : TILE_HEIGHT >> 1;
     const int OUT_BUF_WIDTH = STRIDE == 1 ? TILE_WIDTH : TILE_WIDTH >> 1;
 
-    /*
-    const int KERNEL_GRPS = OUT_FM_DEPTH / OUT_BUF_DEPTH;
-    const int N_TILE_ROWS = IN_FM_HEIGHT / TILE_HEIGHT;
-    const int N_TILE_COLS = IN_FM_WIDTH  / TILE_WIDTH;
-    const int N_TILE_LAYERS = IN_FM_DEPTH / IN_BUF_DEPTH;
-    */
-
     const fm_dims_s in_fm_dims = {IN_FM_DEPTH, IN_FM_HEIGHT, IN_FM_WIDTH};
     const fm_dims_s out_fm_dims = {OUT_FM_DEPTH, OUT_FM_HEIGHT, OUT_FM_WIDTH};
-
-
 
     //--------------------------------------------------------------------------
     // On-chip buffers
@@ -112,7 +102,7 @@ void tiled_conv_core (
 
                 conv_3x3_s1::store_output_tile_to_DRAM
                     <OUT_BUF_DEPTH, OUT_BUF_HEIGHT, OUT_BUF_WIDTH>
-                    (output_feature_map, conv_out_buf, out_fm_dims, ti, tj, tk, relu);
+                    (output_feature_map, conv_out_buf, out_fm_dims, ti, tj, tk);
 
             }
         }
@@ -126,7 +116,6 @@ inline void tiled_conv (
     const fm_t input_feature_map[],
     const wt_t layer_weights[],
     const wt_t layer_bias[],
-    const bool relu,
     const bool inplace_residual = false
 )
 { 
@@ -148,7 +137,6 @@ inline void tiled_conv (
         N_TILE_LAYERS,
         N_TILE_ROWS,
         N_TILE_COLS,
-        relu,
         inplace_residual
         );
 
@@ -167,7 +155,6 @@ void test_conv(
         input_feature_map,
         layer_weights,
         layer_bias,
-        true,
         false
         );
 
@@ -176,7 +163,6 @@ void test_conv(
         input_feature_map,
         layer_weights,
         layer_bias,
-        true,
         true
         );
 }

@@ -1,7 +1,7 @@
 #pragma once
 
-const int OUT_BUF_DEPTH = 32;
-const int IN_BUF_DEPTH = 32;
+const int OUT_BUF_DEPTH = 16;
+const int IN_BUF_DEPTH = 16;
 const int KERNEL_HEIGHT = 3;
 const int KERNEL_WIDTH = 3;
 const int STRIDE = 1;
@@ -13,4 +13,3 @@ const int IN_BUF_HEIGHT = TILE_HEIGHT + 2 * PADDING;
 const int IN_BUF_WIDTH = TILE_WIDTH + 2 * PADDING;
 const int OUT_BUF_HEIGHT = STRIDE == 1 ? TILE_HEIGHT : TILE_HEIGHT >> 1;
 const int OUT_BUF_WIDTH = STRIDE == 1 ? TILE_WIDTH : TILE_WIDTH >> 1;
-

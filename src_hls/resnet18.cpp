@@ -156,23 +156,13 @@ void resnet18(
 
     // layer 1 
     // block 0
-    conv_3x3_s1::tiled_conv<L1_DEPTH, MAXPOOL_DEPTH, L1_SIDE, L1_SIDE>
-    (l1_out0, l1_out1, (wt_t *) l10_c1_weight, l10_c1_bias, true);
-    tiled_conv
-        <L1_DEPTH, L1_DEPTH, 3, 3, 1, 1,
-        L1_SIDE, L1_SIDE, 64, 32, 7, 7>
-    (l1_out1, l1_out0, l10_c2_weight, l10_c2_bias, true, true);
-    WRITE_TO_FILE_NAME(l1_out0, "l10_c1_out", L1_DEPTH, L1_SIDE, L1_SIDE);
+    conv_3x3_s1::tiled_conv<L1_DEPTH, MAXPOOL_DEPTH, L1_SIDE, L1_SIDE>(l1_out0, l1_out1, (wt_t *) l10_c1_weight, l10_c1_bias, false);
+    conv_3x3_s1::tiled_conv<L1_DEPTH, L1_DEPTH, L1_SIDE, L1_SIDE>(l1_out1, l1_out0, (wt_t *) l10_c2_weight, l10_c2_bias, true);
+   WRITE_TO_FILE_NAME(l1_out0, "l10_c1_out", L1_DEPTH, L1_SIDE, L1_SIDE);
     WRITE_TO_FILE_NAME(l1_out1, "l10_c2_out", L1_DEPTH, L1_SIDE, L1_SIDE);
     // block 1
-    tiled_conv
-        <L1_DEPTH, L1_DEPTH, 3, 3, 1, 1,
-        L1_SIDE, L1_SIDE, 64, 32, 7, 7>
-    (l1_out0, l1_out1, l11_c1_weight, l11_c1_bias, true);
-    tiled_conv
-        <L1_DEPTH, L1_DEPTH, 3, 3, 1, 1,
-        L1_SIDE, L1_SIDE, 64, 32, 7, 7>
-    (l1_out1, l1_out0, l11_c2_weight, l11_c2_bias, true, true);
+    conv_3x3_s1::tiled_conv<L1_DEPTH, L1_DEPTH, L1_SIDE, L1_SIDE>(l1_out0, l1_out1, (wt_t *) l11_c1_weight, l11_c1_bias, false);
+    conv_3x3_s1::tiled_conv<L1_DEPTH, L1_DEPTH, L1_SIDE, L1_SIDE>(l1_out1, l1_out0, (wt_t *) l11_c2_weight, l11_c2_bias, true);
     WRITE_TO_FILE_NAME(l1_out0, "l11_c1_out", L1_DEPTH, L1_SIDE, L1_SIDE);
     WRITE_TO_FILE_NAME(l1_out1, "l11_c2_out", L1_DEPTH, L1_SIDE, L1_SIDE);
 
@@ -186,21 +176,12 @@ void resnet18(
         <L2_DEPTH, L1_DEPTH, 3, 3, 2, 1,
         L1_SIDE, L1_SIDE, 64, 32, 14, 14>
         (l2_out0, maxpool_out, l20_c1_weight, l20_c1_bias, true);
-    tiled_conv
-        <L2_DEPTH, L2_DEPTH, 3, 3, 1, 1,
-        L2_SIDE, L2_SIDE, 64, 32, 7, 7>
-        (l2_out1, l2_out0, l20_c2_weight, l20_c2_bias, true, true);
+    conv_3x3_s1::tiled_conv<L2_DEPTH, L2_DEPTH, L2_SIDE, L2_SIDE>(l2_out1, l2_out0, (wt_t *) l20_c2_weight, l20_c2_bias, true);
     WRITE_TO_FILE_NAME(l2_out0, "l20_c1_out", L2_DEPTH, L2_SIDE, L2_SIDE);
     WRITE_TO_FILE_NAME(l2_out1, "l20_c2_out", L2_DEPTH, L2_SIDE, L2_SIDE);
     // block 1
-    tiled_conv
-        <L2_DEPTH, L2_DEPTH, 3, 3, 1, 1,
-        L2_SIDE, L2_SIDE, 64, 32, 7, 7>
-        (l2_out0, l2_out1, l21_c1_weight, l21_c1_bias, true);
-    tiled_conv
-        <L2_DEPTH, L2_DEPTH, 3, 3, 1, 1,
-        L2_SIDE, L2_SIDE, 64, 32, 7, 7>
-        (l2_out1, l2_out0, l21_c2_weight, l21_c2_bias, true, true);
+    conv_3x3_s1::tiled_conv<L2_DEPTH, L2_DEPTH, L2_SIDE, L2_SIDE>(l2_out0, l2_out1, (wt_t *) l21_c1_weight, l21_c1_bias, false);
+    conv_3x3_s1::tiled_conv<L2_DEPTH, L2_DEPTH, L2_SIDE, L2_SIDE>(l2_out1, l2_out0, (wt_t *) l21_c2_weight, l21_c2_bias, true);
     WRITE_TO_FILE_NAME(l2_out0, "l21_c1_out", L2_DEPTH, L2_SIDE, L2_SIDE);
     WRITE_TO_FILE_NAME(l2_out1, "l21_c2_out", L2_DEPTH, L2_SIDE, L2_SIDE);
 
@@ -214,21 +195,12 @@ void resnet18(
         <L3_DEPTH, L2_DEPTH, 3, 3, 2, 1,
         L2_SIDE, L2_SIDE, 64, 32, 14, 14>
         (l3_out0, l2_out1, l30_c1_weight, l30_c1_bias, true);
-    tiled_conv
-        <L3_DEPTH, L3_DEPTH, 3, 3, 1, 1,
-        L3_SIDE, L3_SIDE, 64, 32, 7, 7>
-        (l3_out1, l3_out0, l30_c2_weight, l30_c2_bias, true, true);
+    conv_3x3_s1::tiled_conv<L3_DEPTH, L3_DEPTH, L3_SIDE, L3_SIDE>(l3_out1, l3_out0, (wt_t *) l30_c2_weight, l30_c2_bias, true);
     WRITE_TO_FILE_NAME(l3_out0, "l30_c1_out", L3_DEPTH, L3_SIDE, L3_SIDE);
     WRITE_TO_FILE_NAME(l3_out1, "l30_c2_out", L3_DEPTH, L3_SIDE, L3_SIDE);
     // block 1
-    tiled_conv
-        <L3_DEPTH, L3_DEPTH, 3, 3, 1, 1,
-        L3_SIDE, L3_SIDE, 64, 32, 7, 7>
-        (l3_out0, l3_out1, l31_c1_weight, l31_c1_bias, true);
-    tiled_conv
-        <L3_DEPTH, L3_DEPTH, 3, 3, 1, 1,
-        L3_SIDE, L3_SIDE, 64, 32, 7, 7>
-        (l3_out1, l3_out0, l31_c2_weight, l31_c2_bias, true, true);
+    conv_3x3_s1::tiled_conv<L3_DEPTH, L3_DEPTH, L3_SIDE, L3_SIDE>(l3_out0, l3_out1, (wt_t *) l31_c1_weight, l31_c1_bias, false);
+    conv_3x3_s1::tiled_conv<L3_DEPTH, L3_DEPTH, L3_SIDE, L3_SIDE>(l3_out1, l3_out0, (wt_t *) l31_c2_weight, l31_c2_bias, true);
     WRITE_TO_FILE_NAME(l3_out0, "l31_c1_out", L3_DEPTH, L3_SIDE, L3_SIDE);
     WRITE_TO_FILE_NAME(l3_out1, "l31_c2_out", L3_DEPTH, L3_SIDE, L3_SIDE);
 
@@ -243,21 +215,12 @@ void resnet18(
         <L4_DEPTH, L3_DEPTH, 3, 3, 2, 1,
         L3_SIDE, L3_SIDE, 64, 32, 14, 14>
         (l4_out0, l3_out1, l40_c1_weight, l40_c1_bias, true);
-    tiled_conv
-        <L4_DEPTH, L4_DEPTH, 3, 3, 1, 1,
-        L4_SIDE, L4_SIDE, 64, 32, 7, 7>
-        (l4_out1, l4_out0, l40_c2_weight, l40_c2_bias, true, true);
+    conv_3x3_s1::tiled_conv<L4_DEPTH, L4_DEPTH, L4_SIDE, L4_SIDE>(l4_out1, l4_out0, (wt_t *) l40_c2_weight, l40_c2_bias, true);
     WRITE_TO_FILE_NAME(l4_out0, "l40_c1_out", L4_DEPTH, L4_SIDE, L4_SIDE);
     WRITE_TO_FILE_NAME(l4_out1, "l40_c2_out", L4_DEPTH, L4_SIDE, L4_SIDE);
     // block 1
-    tiled_conv
-        <L4_DEPTH, L4_DEPTH, 3, 3, 1, 1,
-        L4_SIDE, L4_SIDE, 64, 32, 7, 7>
-        (l4_out0, l4_out1, l41_c1_weight, l41_c1_bias, true);
-    tiled_conv
-        <L4_DEPTH, L4_DEPTH, 3, 3, 1, 1,
-        L4_SIDE, L4_SIDE, 64, 32, 7, 7>
-        (l4_out1, l4_out0, l41_c2_weight, l41_c2_bias, true, true);
+    conv_3x3_s1::tiled_conv<L4_DEPTH, L4_DEPTH, L4_SIDE, L4_SIDE>(l4_out0, l4_out1, (wt_t *) l41_c1_weight, l41_c1_bias, false);
+    conv_3x3_s1::tiled_conv<L4_DEPTH, L4_DEPTH, L4_SIDE, L4_SIDE>(l4_out1, l4_out0, (wt_t *) l41_c2_weight, l41_c2_bias, true);
     WRITE_TO_FILE_NAME(l4_out0, "l41_c1_out", L4_DEPTH, L4_SIDE, L4_SIDE);
     WRITE_TO_FILE_NAME(l4_out1, "l41_c2_out", L4_DEPTH, L4_SIDE, L4_SIDE);
 

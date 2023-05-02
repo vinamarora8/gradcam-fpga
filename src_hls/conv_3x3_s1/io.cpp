@@ -113,8 +113,7 @@ void store_output_tile_to_DRAM (
     const fm_dims_s out_fm_dims,
     const int  ti,
     const int  tj,
-    const int  tk,
-    const bool relu
+    const int  tk
 )
 {
 
@@ -139,7 +138,7 @@ void store_output_tile_to_DRAM (
                 int idx = (width_offset + j) + (height_offset + i)*OUT_FM_WIDTH + (depth_offset + f)*OUT_FM_WIDTH*OUT_FM_HEIGHT;
 
                 // ReLU in-place
-                if(relu & (out_fm_buf[f][i][j] < (fm_t) 0))
+                if(out_fm_buf[f][i][j] < (fm_t) 0)
                 {
                     out_fm[idx] = (fm_t) 0;
                 }
