@@ -63,10 +63,13 @@ void tiled_conv_ds(
                             for (int i = 0; i < BUF_HEIGHT; i++)
                                 for (int j = 0; j < BUF_WIDTH; j++)
                                 {
+                                    fm_t x = out_buf[f][i][j];
                                     if (c == 0 && tl == 0)
-                                        out_buf[f][i][j] = bias_buf[f];
+                                        x = bias_buf[f] + in_buf[c][i][j] * wt_buf[f][c];
+                                    else
+                                        x += in_buf[c][i][j] * wt_buf[f][c];
 
-                                    out_buf[f][i][j] += in_buf[c][i][j] * wt_buf[f][c];
+                                    out_buf[f][i][j] = x;
                                 }
                 }
 
