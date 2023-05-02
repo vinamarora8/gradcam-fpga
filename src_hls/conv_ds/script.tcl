@@ -5,7 +5,7 @@ set_top test_conv
 
 # this is your file that to be synthesized as FPGA design
 # TODO
-add_files tiled_conv.cpp
+add_files conv_ds.cpp
 
 # this is your testbench (specified by -tb option)
 # add_files -tb sim.cpp
