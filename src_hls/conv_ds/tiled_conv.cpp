@@ -1,12 +1,13 @@
 #include "../util.h"
 #include <iostream>
 #include <cassert>
+#include <cmath>
 
 namespace conv_ds
 {
 
 const int IN_BUF_DEPTH = 32;
-const int OUT_BUF_DEPTH = 64;
+const int OUT_BUF_DEPTH = 32;
 const int BUF_HEIGHT = 7;
 const int BUF_WIDTH = 7;
 
@@ -34,15 +35,27 @@ void tiled_conv_ds(
     const int N_TILE_LAYERS = IN_FM_DEPTH / IN_BUF_DEPTH;
     const int KERNEL_GROUPS = OUT_FM_DEPTH / OUT_BUF_DEPTH;
 
+    // Power of 2 checks on TILE_ROWS, TILE_COLS, TILE_LAYERS, KERNEL_GROUPS
+    static_assert(N_TILE_ROWS > 0 && (N_TILE_ROWS & (N_TILE_ROWS - 1)) == 0);
+    static_assert(N_TILE_COLS > 0 && (N_TILE_COLS & (N_TILE_COLS - 1)) == 0);
+    static_assert(N_TILE_LAYERS > 0 && (N_TILE_LAYERS & (N_TILE_LAYERS - 1)) == 0);
+    static_assert(KERNEL_GROUPS > 0 && (KERNEL_GROUPS & (KERNEL_GROUPS - 1)) == 0);
+
+    // Find log2 of above:
+    const int LOG_TILE_ROWS = log2(N_TILE_ROWS);
+    const int LOG_TILE_COLS = log2(N_TILE_COLS);
+    const int LOG_TILE_LAYERS = log2(N_TILE_LAYERS);
+    const int LOG_KERNEL_GROUPS = log2(KERNEL_GROUPS);
+
     tiled_conv_ds_core(
         (fm_t *) out_feature_map,
         (fm_t *) in_feature_map,
         (fm_t *) layer_weights,
         layer_bias,
-        N_TILE_ROWS,
-        N_TILE_COLS,
-        N_TILE_LAYERS,
-        KERNEL_GROUPS
+        LOG_TILE_ROWS,
+        LOG_TILE_COLS,
+        LOG_TILE_LAYERS,
+        LOG_KERNEL_GROUPS
     );
 }
 
@@ -56,11 +69,12 @@ void conv(
 {
     #pragma HLS inline off
 
-CONV_OUT_D: for (int f = 0; f < OUT_BUF_DEPTH; f++)
-    CONV_IN_D: for (int c = 0; c < IN_BUF_DEPTH; c++)
-        CONV_ROW: for (int i = 0; i < BUF_HEIGHT; i++)
-            CONV_COL: for (int j = 0; j < BUF_WIDTH; j++)
+CONV_IN_D: for (int c = 0; c < IN_BUF_DEPTH; c++)
+    CONV_ROW: for (int i = 0; i < BUF_HEIGHT; i++)
+        CONV_COL: for (int j = 0; j < BUF_WIDTH; j++)
+            CONV_OUT_D: for (int f = 0; f < OUT_BUF_DEPTH; f++)
                 {
+                    #pragma HLS pipeline II=1
                     fm_t x = out_buf[f][i][j];
                     if (c == 0 && tl == 0)
                         x = bias_buf[f] + in_buf[c][i][j] * wt_buf[f][c];
@@ -76,17 +90,22 @@ void tiled_conv_ds_core(
     const fm_t in_feature_map[],
     const wt_t layer_weights[],
     const wt_t layer_bias[],
-    const int N_TILE_ROWS,
-    const int N_TILE_COLS,
-    const int N_TILE_LAYERS,
-    const int KERNEL_GROUPS
+    const int LOG_TILE_ROWS,
+    const int LOG_TILE_COLS,
+    const int LOG_TILE_LAYERS,
+    const int LOG_KERNEL_GROUPS
 )
 {
-    #pragma HLS INTERFACE m_axi depth=1  port=in_feature_map   bundle=ds_in
-    #pragma HLS INTERFACE m_axi depth=1  port=layer_weights    bundle=ds_wt
-    #pragma HLS INTERFACE m_axi depth=1  port=layer_bias       bundle=ds_wt
-    #pragma HLS INTERFACE m_axi depth=1  port=out_feature_map  bundle=ds_out
+    #pragma HLS INTERFACE m_axi depth=1  port=in_feature_map   bundle=ds
+    #pragma HLS INTERFACE m_axi depth=1  port=layer_weights    bundle=ds
+    #pragma HLS INTERFACE m_axi depth=1  port=layer_bias       bundle=ds
+    #pragma HLS INTERFACE m_axi depth=1  port=out_feature_map  bundle=d_
     #pragma HLS INTERFACE s_axilite register	port=return
+
+    const int N_TILE_ROWS = 1 << LOG_TILE_ROWS;
+    const int N_TILE_COLS = 1 << LOG_TILE_COLS;
+    const int N_TILE_LAYERS = 1 << LOG_TILE_LAYERS;
+    const int KERNEL_GROUPS = 1 << LOG_KERNEL_GROUPS;
 
     const int IN_FM_DEPTH = IN_BUF_DEPTH * N_TILE_LAYERS;
     const int IN_FM_WIDTH = 2 * BUF_WIDTH * N_TILE_COLS;
@@ -109,6 +128,10 @@ void tiled_conv_ds_core(
             KERNEL_GRP:
             for (int tk = 0; tk < KERNEL_GROUPS; tk++)
             {
+                    // Load layer bias
+                BIAS: for (int f = 0; f < OUT_BUF_DEPTH; f++)
+                        bias_buf[f] = layer_bias[tk*OUT_BUF_DEPTH + f];
+
                 TILE_LYR:
                 for (int tl = 0; tl < N_TILE_LAYERS; tl++)
                 {
@@ -117,6 +140,7 @@ void tiled_conv_ds_core(
                         INP_R: for (int i = 0; i < BUF_HEIGHT; i++)
                             INP_C: for (int j = 0; j < BUF_WIDTH; j++)
                             {
+                                #pragma HLS pipeline II=1
                                 int idx_d = tl*IN_BUF_DEPTH + c;
                                 int idx_h = 2*ti*BUF_HEIGHT + 2*i;
                                 int idx_w = 2*tj*BUF_WIDTH + 2*j;
@@ -126,11 +150,10 @@ void tiled_conv_ds_core(
                     // Load layer weights
                 KER_OUT: for (int f = 0; f < OUT_BUF_DEPTH; f++)
                         KER_IN: for (int c = 0; c < IN_BUF_DEPTH; c++)
+                        {
+                            #pragma HLS pipeline II=1
                             wt_buf[f][c] = layer_weights[(tk*OUT_BUF_DEPTH + f)*IN_FM_DEPTH + tl*IN_BUF_DEPTH + c];
-
-                    // Load layer bias
-                BIAS: for (int f = 0; f < OUT_BUF_DEPTH; f++)
-                        bias_buf[f] = layer_bias[tk*OUT_BUF_DEPTH + f];
+                        }
 
                     // Compute
                      conv_ds::conv(out_buf, in_buf, wt_buf, bias_buf, tl);
@@ -141,6 +164,7 @@ void tiled_conv_ds_core(
                     OUT_R: for (int i = 0; i < BUF_HEIGHT; i++)
                         OUT_C: for (int j = 0; j < BUF_WIDTH; j++)
                         {
+                            #pragma HLS pipeline II=1
                             int idx_d = tk*OUT_BUF_DEPTH + f;
                             int idx_h = ti*BUF_HEIGHT + i;
                             int idx_w = tj*BUF_WIDTH + j;
@@ -152,6 +176,16 @@ void tiled_conv_ds_core(
     }
 }
 
+
+void test_conv(
+    fm_t out_feature_map[128][28][28],
+    fm_t in_feature_map[64][56][56],
+    wt_t layer_weights[128][64],
+    wt_t layer_bias[128]
+)
+{
+    conv_ds::tiled_conv_ds<128, 64, 56, 56>(out_feature_map, in_feature_map, layer_weights, layer_bias);
+}
 
 #if 0
 #include "conv.cpp"
