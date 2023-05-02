@@ -6,6 +6,7 @@
 #include "tiled_conv/tiled_conv.cpp"
 #include "conv1/conv1.hpp"
 #include "conv_ds/conv_ds.hpp"
+#include "conv_3x3_s1/conv_3x3_s1.cpp"
 #include "residual.cpp"
 
 #ifdef CSIM_DEBUG
@@ -155,7 +156,7 @@ void resnet18(
 
     // layer 1 
     // block 0
-    tiled_conv
+    conv_3x3_s1::tiled_conv
         <L1_DEPTH, MAXPOOL_DEPTH, 3, 3, 1, 1,
         L1_SIDE, L1_SIDE, 64, 32, 7, 7>
     (l1_out0, l1_out1, l10_c1_weight, l10_c1_bias, true);
