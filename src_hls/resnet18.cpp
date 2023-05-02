@@ -3,11 +3,10 @@
 #include "max_pool.h"
 #include "avg_pool.h"
 #include "linear_fc.h"
-#include "tiled_conv/tiled_conv.cpp"
 #include "conv1/conv1.hpp"
 #include "conv_ds/conv_ds.hpp"
-#include "conv_3x3_s1/conv_3x3_s1.cpp"
-#include "conv_3x3_s2/conv_3x3_s2.cpp"
+#include "conv_3x3_s1/conv_3x3_s1.hpp"
+#include "conv_3x3_s2/conv_3x3_s2.hpp"
 #include "residual.cpp"
 
 #ifdef CSIM_DEBUG
