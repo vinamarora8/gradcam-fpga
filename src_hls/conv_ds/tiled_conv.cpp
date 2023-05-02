@@ -91,6 +91,12 @@ CONV_IN_D: for (int c = 0; c < IN_BUF_DEPTH; c++)
                 }
 }
 
+int index_calc(int idx_d, int idx_h, int idx_w, int IN_FM_HEIGHT, int IN_FM_WIDTH)
+{
+    #pragma HLS inline off
+    return idx_d*IN_FM_HEIGHT*IN_FM_WIDTH + idx_h*IN_FM_WIDTH + idx_w;
+}
+
 void tiled_conv_ds_core(
     fm_t out_feature_map[],
     const fm_t in_feature_map[],
@@ -152,7 +158,8 @@ void tiled_conv_ds_core(
                                 int idx_d = tl*IN_BUF_DEPTH + c;
                                 int idx_h = 2*ti*BUF_HEIGHT + 2*i;
                                 int idx_w = 2*tj*BUF_WIDTH + 2*j;
-                                in_buf[c][i][j] = in_feature_map[idx_d*IN_FM_HEIGHT*IN_FM_WIDTH + idx_h*IN_FM_WIDTH + idx_w];
+                                int idx = conv_ds::index_calc(idx_d, idx_h, idx_w, IN_FM_HEIGHT, IN_FM_WIDTH);
+                                in_buf[c][i][j] = in_feature_map[idx];
                             }
 
                     // Load layer weights
@@ -176,7 +183,8 @@ void tiled_conv_ds_core(
                             int idx_d = tk*OUT_BUF_DEPTH + f;
                             int idx_h = ti*BUF_HEIGHT + i;
                             int idx_w = tj*BUF_WIDTH + j;
-                            out_feature_map[idx_d*OUT_FM_HEIGHT*OUT_FM_WIDTH + idx_h*OUT_FM_WIDTH + idx_w] = out_buf[f][i][j];
+                            int idx = conv_ds::index_calc(idx_d, idx_h, idx_w, OUT_FM_HEIGHT, OUT_FM_WIDTH);
+                            out_feature_map[idx] = out_buf[f][i][j];
                         }
             }
             
