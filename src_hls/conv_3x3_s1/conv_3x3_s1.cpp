@@ -7,10 +7,15 @@ namespace conv_3x3_s1 {
 #include "conv.cpp"
 #include "io.cpp"
 
-template<
-int OUT_BUF_DEPTH, int IN_BUF_DEPTH, int KERNEL_HEIGHT, int KERNEL_WIDTH, int STRIDE, int PADDING, // Kernel
-int TILE_HEIGHT, int TILE_WIDTH // Tile shapes
->
+const int OUT_BUF_DEPTH = 32;
+const int IN_BUF_DEPTH = 32;
+const int KERNEL_HEIGHT = 3;
+const int KERNEL_WIDTH = 3;
+const int STRIDE = 1;
+const int PADDING = 1;
+const int TILE_HEIGHT = 7;
+const int TILE_WIDTH = 7;
+
 void tiled_conv_core (
     fm_t output_feature_map[],
     const fm_t input_feature_map[],
@@ -128,11 +133,7 @@ void tiled_conv_core (
 }
 
 
-template<
-int OUT_FM_DEPTH, int IN_FM_DEPTH, int KERNEL_HEIGHT, int KERNEL_WIDTH, int STRIDE, int PADDING, // Kernel
-int IN_FM_HEIGHT, int IN_FM_WIDTH,  // Input
-int OUT_BUF_DEPTH, int IN_BUF_DEPTH, int TILE_HEIGHT, int TILE_WIDTH // Tile shapes
->
+template<int OUT_FM_DEPTH, int IN_FM_DEPTH, int IN_FM_HEIGHT, int IN_FM_WIDTH>
 inline void tiled_conv (
     fm_t output_feature_map[],
     const fm_t input_feature_map[],
@@ -151,10 +152,8 @@ inline void tiled_conv (
     const int N_TILE_COLS = IN_FM_WIDTH  / TILE_WIDTH;
     const int N_TILE_LAYERS = IN_FM_DEPTH / IN_BUF_DEPTH;
 
-    tiled_conv_core
-        <OUT_BUF_DEPTH, IN_BUF_DEPTH, KERNEL_HEIGHT, KERNEL_WIDTH, STRIDE, PADDING,
-        TILE_HEIGHT, TILE_WIDTH>
-        (output_feature_map,
+    tiled_conv_core(
+        output_feature_map,
         input_feature_map,
         (fm_t *) layer_weights,
         (fm_t *) layer_bias,

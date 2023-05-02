@@ -156,9 +156,7 @@ void resnet18(
 
     // layer 1 
     // block 0
-    conv_3x3_s1::tiled_conv
-        <L1_DEPTH, MAXPOOL_DEPTH, 3, 3, 1, 1,
-        L1_SIDE, L1_SIDE, 64, 32, 7, 7>
+    conv_3x3_s1::tiled_conv<L1_DEPTH, MAXPOOL_DEPTH, L1_SIDE, L1_SIDE>
     (l1_out0, l1_out1, l10_c1_weight, l10_c1_bias, true);
     tiled_conv
         <L1_DEPTH, L1_DEPTH, 3, 3, 1, 1,
