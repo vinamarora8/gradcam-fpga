@@ -5,6 +5,11 @@
 namespace conv_ds
 {
 
+const int IN_BUF_DEPTH = 64;
+const int OUT_BUF_DEPTH = 64;
+const int BUF_HEIGHT = 7;
+const int BUF_WIDTH = 7;
+
 template<int OUT_FM_DEPTH, int IN_FM_DEPTH, int IN_FM_HEIGHT, int IN_FM_WIDTH>
 void tiled_conv_ds(
     fm_t out_feature_map[OUT_FM_DEPTH][IN_FM_HEIGHT/2][IN_FM_WIDTH/2],
@@ -13,28 +18,62 @@ void tiled_conv_ds(
     const wt_t layer_bias[OUT_FM_DEPTH]
 )
 {
-
     const int OUT_FM_HEIGHT = IN_FM_HEIGHT / 2;
     const int OUT_FM_WIDTH = IN_FM_WIDTH / 2;
+    const int N_TILE_ROWS = OUT_FM_HEIGHT / BUF_HEIGHT;
+    const int N_TILE_COLS = OUT_FM_WIDTH / BUF_WIDTH;
+    const int KERNEL_GROUPS = OUT_FM_DEPTH / OUT_BUF_DEPTH;
 
-    static fm_t conv_in_buf[IN_FM_DEPTH][OUT_FM_HEIGHT][OUT_FM_WIDTH];
+    static fm_t in_buf[IN_BUF_DEPTH][BUF_HEIGHT][BUF_WIDTH];
+    static fm_t out_buf[OUT_BUF_DEPTH][BUF_HEIGHT][BUF_WIDTH];
+    static fm_t wt_buf[OUT_BUF_DEPTH][IN_BUF_DEPTH];
+    static fm_t bias_buf[OUT_BUF_DEPTH];
 
-    for (int f = 0; f < IN_FM_DEPTH; f++)
-        for (int i = 0; i < IN_FM_HEIGHT; i+=2)
-            for (int j = 0; j < IN_FM_WIDTH; j+=2)
-                conv_in_buf[f][i/2][j/2] = in_feature_map[f][i][j];
+    TILE_ROW:
+    for(int ti = 0; ti < N_TILE_ROWS; ti++)
+    {
+        TILE_COL:
+        for(int tj = 0; tj < N_TILE_COLS; tj++)
+        {
+            // Load input tile
+            for (int c = 0; c < IN_FM_DEPTH; c++)
+                for (int i = 0; i < BUF_HEIGHT; i++)
+                    for (int j = 0; j < BUF_WIDTH; j++)
+                        in_buf[c][i][j] = in_feature_map[c][2*ti*BUF_HEIGHT + 2*i][2*tj*BUF_WIDTH + 2*j];
 
-    for (int f = 0; f < OUT_FM_DEPTH; f++)
-        for (int c = 0; c < IN_FM_DEPTH; c++)
-            for (int i = 0; i < OUT_FM_HEIGHT; i++)
-                for (int j = 0; j < OUT_FM_WIDTH; j++)
-                {
-                    if (c == 0)
-                        out_feature_map[f][i][j] = layer_bias[f];
+            KERNEL_GRP:
+            for (int tk = 0; tk < KERNEL_GROUPS; tk++)
+            {
+                // Load layer weights
+                for (int f = 0; f < OUT_BUF_DEPTH; f++)
+                    for (int c = 0; c < IN_BUF_DEPTH; c++)
+                        wt_buf[f][c] = layer_weights[tk*OUT_BUF_DEPTH + f][c];
 
-                    out_feature_map[f][i][j] += conv_in_buf[c][i][j] * layer_weights[f][c];
-                }
+                // Load layer bias
+                for (int f = 0; f < OUT_BUF_DEPTH; f++)
+                    bias_buf[f] = layer_bias[tk*OUT_BUF_DEPTH + f];
 
+                // Compute
+                for (int f = 0; f < OUT_BUF_DEPTH; f++)
+                    for (int c = 0; c < IN_BUF_DEPTH; c++)
+                        for (int i = 0; i < BUF_HEIGHT; i++)
+                            for (int j = 0; j < BUF_WIDTH; j++)
+                            {
+                                if (c == 0)
+                                    out_buf[f][i][j] = bias_buf[f];
+
+                                out_buf[f][i][j] += in_buf[c][i][j] * wt_buf[f][c];
+                            }
+
+                // Store output tile
+                for (int f = 0; f < OUT_BUF_DEPTH; f++)
+                    for (int i = 0; i < BUF_HEIGHT; i++)
+                        for (int j = 0; j < BUF_WIDTH; j++)
+                            out_feature_map[tk*OUT_BUF_DEPTH + f][ti*BUF_HEIGHT + i][tj*BUF_WIDTH + j] = out_buf[f][i][j];
+            }
+            
+        }
+    }
 }
 
 #if 0
@@ -106,7 +145,7 @@ void tiled_conv_core (
     //--------------------------------------------------------------------------
     // On-chip buffers
     //--------------------------------------------------------------------------
-    static fm_t conv_in_buf[IN_BUF_DEPTH][IN_BUF_HEIGHT][IN_BUF_WIDTH];
+    static fm_t conv_in_buf[IN_BUF_DEPTH][OUT_BUF_HEIGHT][OUT_BUF_WIDTH];
     static wt_t conv_wt_buf[OUT_BUF_DEPTH][IN_BUF_DEPTH][KERNEL_HEIGHT][KERNEL_WIDTH];
     static wt_t conv_bias_buf[OUT_BUF_DEPTH];
     static fm_t conv_out_buf[OUT_BUF_DEPTH][OUT_BUF_HEIGHT][OUT_BUF_WIDTH];
@@ -124,18 +163,11 @@ void tiled_conv_core (
             KERNEL_GRP:
             for (int tk = 0; tk < KERNEL_GRPS; tk++)
             {
-                if (inplace_residual)
-                {
-                    conv_ds::load_fm_tile_block_from_DRAM
-                        <OUT_BUF_DEPTH, OUT_BUF_HEIGHT, OUT_BUF_WIDTH, 0>
-                        (conv_out_buf, output_feature_map, out_fm_dims, ti, tj, tk);
-                }
-
                 TILE_LYR:
                 for (int tl = 0; tl < N_TILE_LAYERS; tl++)
                 {
                     conv_ds::load_fm_tile_block_from_DRAM
-                        <IN_BUF_DEPTH, TILE_HEIGHT, TILE_WIDTH, PADDING>
+                        <IN_BUF_DEPTH, TILE_HEIGHT, TILE_WIDTH>
                         (conv_in_buf, input_feature_map, in_fm_dims, ti, tj, tl);
 
                     conv_ds::load_layer_params_from_DRAM
