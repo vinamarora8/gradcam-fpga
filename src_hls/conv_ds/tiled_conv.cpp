@@ -5,6 +5,39 @@
 namespace conv_ds
 {
 
+template<int OUT_FM_DEPTH, int IN_FM_DEPTH, int IN_FM_HEIGHT, int IN_FM_WIDTH>
+void tiled_conv_ds(
+    fm_t out_feature_map[OUT_FM_DEPTH][IN_FM_HEIGHT/2][IN_FM_WIDTH/2],
+    const fm_t in_feature_map[IN_FM_DEPTH][IN_FM_HEIGHT][IN_FM_WIDTH],
+    const wt_t layer_weights[OUT_FM_DEPTH][IN_FM_DEPTH],
+    const wt_t layer_bias[OUT_FM_DEPTH]
+)
+{
+
+    const int OUT_FM_HEIGHT = IN_FM_HEIGHT / 2;
+    const int OUT_FM_WIDTH = IN_FM_WIDTH / 2;
+
+    static fm_t conv_in_buf[IN_FM_DEPTH][OUT_FM_HEIGHT][OUT_FM_WIDTH];
+
+    for (int f = 0; f < IN_FM_DEPTH; f++)
+        for (int i = 0; i < IN_FM_HEIGHT; i+=2)
+            for (int j = 0; j < IN_FM_WIDTH; j+=2)
+                conv_in_buf[f][i/2][j/2] = in_feature_map[f][i][j];
+
+    for (int f = 0; f < OUT_FM_DEPTH; f++)
+        for (int c = 0; c < IN_FM_DEPTH; c++)
+            for (int i = 0; i < OUT_FM_HEIGHT; i++)
+                for (int j = 0; j < OUT_FM_WIDTH; j++)
+                {
+                    if (c == 0)
+                        out_feature_map[f][i][j] = layer_bias[f];
+
+                    out_feature_map[f][i][j] += conv_in_buf[c][i][j] * layer_weights[f][c];
+                }
+
+}
+
+#if 0
 #include "conv.cpp"
 #include "io.cpp"
 
@@ -171,6 +204,7 @@ inline void tiled_conv (
         );
 
 }
+#endif
         
 
 }
