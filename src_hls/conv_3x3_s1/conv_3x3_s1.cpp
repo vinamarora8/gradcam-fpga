@@ -4,17 +4,9 @@
 
 namespace conv_3x3_s1 {
 
+#include "params.hpp"
 #include "conv.cpp"
 #include "io.cpp"
-
-const int OUT_BUF_DEPTH = 32;
-const int IN_BUF_DEPTH = 32;
-const int KERNEL_HEIGHT = 3;
-const int KERNEL_WIDTH = 3;
-const int STRIDE = 1;
-const int PADDING = 1;
-const int TILE_HEIGHT = 7;
-const int TILE_WIDTH = 7;
 
 void tiled_conv_core (
     fm_t output_feature_map[],
@@ -29,6 +21,13 @@ void tiled_conv_core (
     const bool inplace_residual = false
 )
 {
+    #pragma HLS inline off
+    #pragma HLS INTERFACE m_axi depth=1  port=input_feature_map   bundle=fm_in
+    #pragma HLS INTERFACE m_axi depth=1  port=layer_weights       bundle=wt
+    #pragma HLS INTERFACE m_axi depth=1  port=layer_bias          bundle=wt
+    #pragma HLS INTERFACE m_axi depth=1  port=output_feature_map  bundle=fm_out
+    #pragma HLS INTERFACE s_axilite register	port=return
+
     static_assert(STRIDE == 1 || STRIDE == 2, "STRIDE > 2 not implemented");
     static_assert(TILE_HEIGHT % STRIDE == 0, "TILE_HEIGHT must be a multiple of STRIDE");
     static_assert(TILE_WIDTH % STRIDE == 0, "TILE_WIDTH must be a multiple of STRIDE");
@@ -65,14 +64,6 @@ void tiled_conv_core (
     const fm_dims_s out_fm_dims = {OUT_FM_DEPTH, OUT_FM_HEIGHT, OUT_FM_WIDTH};
 
 
-    //--------------------------------------------------------------------------
-    // Defines interface IO ports for HLS.
-    //--------------------------------------------------------------------------
-    #pragma HLS INTERFACE m_axi depth=1  port=input_feature_map   bundle=fm
-    #pragma HLS INTERFACE m_axi depth=1  port=layer_weights       bundle=wt
-    #pragma HLS INTERFACE m_axi depth=1  port=layer_bias          bundle=wt
-    #pragma HLS INTERFACE m_axi depth=1  port=output_feature_map  bundle=fm
-    #pragma HLS INTERFACE s_axilite register	port=return
 
     //--------------------------------------------------------------------------
     // On-chip buffers
@@ -99,7 +90,7 @@ void tiled_conv_core (
                 {
                     conv_3x3_s1::load_fm_tile_block_from_DRAM
                         <OUT_BUF_DEPTH, OUT_BUF_HEIGHT, OUT_BUF_WIDTH, 0>
-                        (conv_out_buf, output_feature_map, out_fm_dims, ti, tj, tk);
+                        (conv_out_buf, output_feature_map, OUT_FM_HEIGHT, OUT_FM_WIDTH, ti, tj, tk);
                 }
 
                 TILE_LYR:
@@ -107,18 +98,14 @@ void tiled_conv_core (
                 {
                     conv_3x3_s1::load_fm_tile_block_from_DRAM
                         <IN_BUF_DEPTH, TILE_HEIGHT, TILE_WIDTH, PADDING>
-                        (conv_in_buf, input_feature_map, in_fm_dims, ti, tj, tl);
+                        (conv_in_buf, input_feature_map, IN_FM_HEIGHT, IN_FM_WIDTH, ti, tj, tl);
 
                     conv_3x3_s1::load_layer_params_from_DRAM
-                        <OUT_BUF_DEPTH, IN_BUF_DEPTH, KERNEL_HEIGHT, KERNEL_WIDTH>
                         (conv_wt_buf, conv_bias_buf, (fm_t *) layer_weights, layer_bias, 
                          OUT_FM_DEPTH, IN_FM_DEPTH, tk, tl);
 
                     bool residual = inplace_residual || (tl != 0);
                     conv_3x3_s1::conv_small
-                        <OUT_BUF_DEPTH, OUT_BUF_HEIGHT, OUT_BUF_WIDTH,
-                        IN_BUF_DEPTH, IN_BUF_HEIGHT, IN_BUF_WIDTH,
-                        KERNEL_HEIGHT, KERNEL_WIDTH, STRIDE>
                         (conv_out_buf, conv_in_buf, conv_wt_buf, conv_bias_buf, residual);
 
                 }
@@ -137,8 +124,8 @@ template<int OUT_FM_DEPTH, int IN_FM_DEPTH, int IN_FM_HEIGHT, int IN_FM_WIDTH>
 inline void tiled_conv (
     fm_t output_feature_map[],
     const fm_t input_feature_map[],
-    const wt_t layer_weights[OUT_FM_DEPTH][IN_FM_DEPTH][KERNEL_HEIGHT][KERNEL_WIDTH],
-    const wt_t layer_bias[OUT_FM_DEPTH],
+    const wt_t layer_weights[],
+    const wt_t layer_bias[],
     const bool relu,
     const bool inplace_residual = false
 )
@@ -165,6 +152,33 @@ inline void tiled_conv (
         inplace_residual
         );
 
+}
+
+
+void test_conv(
+    fm_t output_feature_map[],
+    const fm_t input_feature_map[],
+    const wt_t layer_weights[],
+    const wt_t layer_bias[]
+)
+{
+    conv_3x3_s1::tiled_conv<64, 64, 56, 56>(
+        output_feature_map,
+        input_feature_map,
+        layer_weights,
+        layer_bias,
+        true,
+        false
+        );
+
+    conv_3x3_s1::tiled_conv<64, 64, 56, 56>(
+        output_feature_map,
+        input_feature_map,
+        layer_weights,
+        layer_bias,
+        true,
+        true
+        );
 }
         
 }
