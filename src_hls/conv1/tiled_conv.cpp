@@ -43,17 +43,17 @@ void tiled_conv(
         for(int tj = 0; tj < N_TILE_COLS; tj++)
         {
 
-            load_fm_tile_block_from_DRAM
+            conv1::load_fm_tile_block_from_DRAM
                 <IN_BUF_DEPTH, TILE_HEIGHT, TILE_WIDTH, PADDING, IN_FM_DEPTH, IN_FM_HEIGHT, IN_FM_WIDTH>
                 (conv_in_buf, input_feature_map, ti, tj, 0);
 
             KERNEL_GRP:
             for (int tk = 0; tk < KERNEL_GRPS; tk++)
             {
-                load_layer_params_from_DRAM(conv_wt_buf, conv_bias_buf, layer_weights, layer_bias, tk);
-                conv_small(conv_out_buf, conv_in_buf, conv_wt_buf, conv_bias_buf);
+                conv1::load_layer_params_from_DRAM(conv_wt_buf, conv_bias_buf, layer_weights, layer_bias, tk);
+                conv1::conv_small(conv_out_buf, conv_in_buf, conv_wt_buf, conv_bias_buf);
 
-                store_output_tile_to_DRAM
+                conv1::store_output_tile_to_DRAM
                     <OUT_BUF_DEPTH, OUT_BUF_HEIGHT, OUT_BUF_WIDTH, OUT_FM_DEPTH, OUT_FM_HEIGHT, OUT_FM_WIDTH>
                     (output_feature_map, conv_out_buf, ti, tj, tk, relu);
 
