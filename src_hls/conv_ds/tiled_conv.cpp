@@ -128,12 +128,16 @@ void tiled_conv_core (
     }
 }
 
+const int KERNEL_HEIGHT = 1;
+const int KERNEL_WIDTH = 1;
+const int STRIDE = 2;
+const int PADDING = 0;
+const int OUT_BUF_DEPTH = 64;
+const int IN_BUF_DEPTH = 32;
+const int TILE_HEIGHT = 14;
+const int TILE_WIDTH = 14;
 
-template<
-int OUT_FM_DEPTH, int IN_FM_DEPTH, int KERNEL_HEIGHT, int KERNEL_WIDTH, int STRIDE, int PADDING, // Kernel
-int IN_FM_HEIGHT, int IN_FM_WIDTH,  // Input
-int OUT_BUF_DEPTH, int IN_BUF_DEPTH, int TILE_HEIGHT, int TILE_WIDTH // Tile shapes
->
+template<int OUT_FM_DEPTH, int IN_FM_DEPTH, int IN_FM_HEIGHT, int IN_FM_WIDTH>
 inline void tiled_conv (
     fm_t output_feature_map[],
     const fm_t input_feature_map[],

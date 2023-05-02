@@ -180,8 +180,7 @@ void resnet18(
     // layer 2
     // downsample
     conv_ds::tiled_conv
-        <L2_DEPTH, L1_DEPTH, 1, 1, 2, 0,
-        L1_SIDE, L1_SIDE, 64, 32, 14, 14>
+        <L2_DEPTH, L1_DEPTH, L1_SIDE, L1_SIDE>
         (l2_out1, maxpool_out, l2_ds_weight, l2_ds_bias, false);
     WRITE_TO_FILE_NAME(l2_out1, "l2_ds_out", L2_DEPTH, L2_SIDE, L2_SIDE);
     // block 0
