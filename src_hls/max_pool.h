@@ -12,6 +12,7 @@ void maxpool2d(
     fm_t input[ID][IH][IW]
 )
 {
+    #pragma HLS inline off
     assert(OH == CONV_DIM(IH, KH, PD, ST));
     assert(OW == CONV_DIM(IW, KW, PD, ST));
 
