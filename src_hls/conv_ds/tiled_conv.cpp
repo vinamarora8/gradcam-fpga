@@ -35,27 +35,15 @@ void tiled_conv_ds(
     const int N_TILE_LAYERS = IN_FM_DEPTH / IN_BUF_DEPTH;
     const int KERNEL_GROUPS = OUT_FM_DEPTH / OUT_BUF_DEPTH;
 
-    // Power of 2 checks on TILE_ROWS, TILE_COLS, TILE_LAYERS, KERNEL_GROUPS
-    static_assert(N_TILE_ROWS > 0 && (N_TILE_ROWS & (N_TILE_ROWS - 1)) == 0);
-    static_assert(N_TILE_COLS > 0 && (N_TILE_COLS & (N_TILE_COLS - 1)) == 0);
-    static_assert(N_TILE_LAYERS > 0 && (N_TILE_LAYERS & (N_TILE_LAYERS - 1)) == 0);
-    static_assert(KERNEL_GROUPS > 0 && (KERNEL_GROUPS & (KERNEL_GROUPS - 1)) == 0);
-
-    // Find log2 of above:
-    const int LOG_TILE_ROWS = log2(N_TILE_ROWS);
-    const int LOG_TILE_COLS = log2(N_TILE_COLS);
-    const int LOG_TILE_LAYERS = log2(N_TILE_LAYERS);
-    const int LOG_KERNEL_GROUPS = log2(KERNEL_GROUPS);
-
     conv_ds::tiled_conv_ds_core(
         (fm_t *) out_feature_map,
         (fm_t *) in_feature_map,
         (fm_t *) layer_weights,
         layer_bias,
-        LOG_TILE_ROWS,
-        LOG_TILE_COLS,
-        LOG_TILE_LAYERS,
-        LOG_KERNEL_GROUPS
+        N_TILE_ROWS,
+        N_TILE_COLS,
+        N_TILE_LAYERS,
+        KERNEL_GROUPS
     );
 }
 
@@ -102,10 +90,10 @@ void tiled_conv_ds_core(
     const fm_t in_feature_map[],
     const wt_t layer_weights[],
     const wt_t layer_bias[],
-    const int LOG_TILE_ROWS,
-    const int LOG_TILE_COLS,
-    const int LOG_TILE_LAYERS,
-    const int LOG_KERNEL_GROUPS
+    const int N_TILE_ROWS,
+    const int N_TILE_COLS,
+    const int N_TILE_LAYERS,
+    const int KERNEL_GROUPS
 )
 {
     #pragma HLS inline off
@@ -115,11 +103,6 @@ void tiled_conv_ds_core(
     #pragma HLS INTERFACE m_axi depth=1  port=layer_bias       bundle=ds
     #pragma HLS INTERFACE m_axi depth=1  port=out_feature_map  bundle=d_
     #pragma HLS INTERFACE s_axilite register	port=return
-
-    const int N_TILE_ROWS = 1 << LOG_TILE_ROWS;
-    const int N_TILE_COLS = 1 << LOG_TILE_COLS;
-    const int N_TILE_LAYERS = 1 << LOG_TILE_LAYERS;
-    const int KERNEL_GROUPS = 1 << LOG_KERNEL_GROUPS;
 
     const int IN_FM_DEPTH = IN_BUF_DEPTH * N_TILE_LAYERS;
     const int IN_FM_WIDTH = 2 * BUF_WIDTH * N_TILE_COLS;
