@@ -5,7 +5,7 @@
 #include "linear_fc.h"
 #include "tiled_conv/tiled_conv.cpp"
 #include "conv1/tiled_conv.hpp"
-#include "conv_ds/tiled_conv.cpp"
+#include "conv_ds/tiled_conv.hpp"
 #include "residual.cpp"
 
 #ifdef CSIM_DEBUG
@@ -207,10 +207,8 @@ void resnet18(
 
     // layer 3
     // downsample
-    tiled_conv
-        <L3_DEPTH, L2_DEPTH, 1, 1, 2, 0,
-        L2_SIDE, L2_SIDE, 64, 16, 14, 14>
-        (l3_out1, l2_out1, l3_ds_weight, l3_ds_bias, false);
+    conv_ds::tiled_conv_ds<L3_DEPTH, L2_DEPTH, L2_SIDE, L2_SIDE>
+        (l3_out1, l2_out1, (fm_t *)l3_ds_weight, l3_ds_bias);
     WRITE_TO_FILE_NAME(l3_out1, "l3_ds_out", L3_DEPTH, L3_SIDE, L3_SIDE);
     // block 0
     tiled_conv
@@ -238,10 +236,8 @@ void resnet18(
 
     // layer 4
     // downsample
-    tiled_conv
-        <L4_DEPTH, L3_DEPTH, 1, 1, 2, 0,
-        L3_SIDE, L3_SIDE, 64, 16, 14, 14>
-        (l4_out1, l3_out1, l4_ds_weight, l4_ds_bias, false);
+    conv_ds::tiled_conv_ds<L4_DEPTH, L3_DEPTH, L3_SIDE, L3_SIDE>
+        (l4_out1, l3_out1, (fm_t *)l4_ds_weight, l4_ds_bias);
     WRITE_TO_FILE_NAME(l4_out1, "l4_ds_out", L4_DEPTH, L4_SIDE, L4_SIDE);
     // block 0
     tiled_conv
