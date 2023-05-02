@@ -5,6 +5,8 @@ set_top resnet18
 
 # this is your file that to be synthesized as FPGA design
 add_files resnet18.cpp
+add_files conv1/tiled_conv.cpp 
+add_files conv_ds/conv_ds.cpp
 
 # this is your testbench (specified by -tb option)
 # add_files -tb sim.cpp

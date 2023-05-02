@@ -15,7 +15,7 @@ all: $(ALLOUT)
 
 .PHONY: sim
 sim : 
-	g++ -DCSIM_DEBUG sim.cpp conv1/tiled_conv.cpp conv_ds/tiled_conv.cpp
+	g++ -DCSIM_DEBUG sim.cpp conv1/conv1.cpp conv_ds/conv_ds.cpp
 
 clean:
 	rm -f -r csim.d 

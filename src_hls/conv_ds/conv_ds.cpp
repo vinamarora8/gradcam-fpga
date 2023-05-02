@@ -2,12 +2,12 @@
 #include <iostream>
 #include <cassert>
 #include <cmath>
-#include "tiled_conv.hpp"
+#include "conv_ds.hpp"
 
 namespace conv_ds
 {
 
-void conv(
+void conv_small(
     fm_t out_buf[OUT_BUF_DEPTH][BUF_HEIGHT][BUF_WIDTH],
     const fm_t in_buf[IN_BUF_DEPTH][BUF_HEIGHT][BUF_WIDTH],
     const wt_t wt_buf[OUT_BUF_DEPTH][IN_BUF_DEPTH],
@@ -114,7 +114,7 @@ void tiled_conv_ds_core(
                         }
 
                     // Compute
-                     conv_ds::conv(out_buf, in_buf, wt_buf, bias_buf, tl);
+                     conv_ds::conv_small(out_buf, in_buf, wt_buf, bias_buf, tl);
                 }
 
                 // Store output tile

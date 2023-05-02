@@ -4,8 +4,8 @@
 #include "avg_pool.h"
 #include "linear_fc.h"
 #include "tiled_conv/tiled_conv.cpp"
-#include "conv1/tiled_conv.hpp"
-#include "conv_ds/tiled_conv.hpp"
+#include "conv1/conv1.hpp"
+#include "conv_ds/conv_ds.hpp"
 #include "residual.cpp"
 
 #ifdef CSIM_DEBUG
