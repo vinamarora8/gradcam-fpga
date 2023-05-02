@@ -5,6 +5,7 @@
 #include "linear_fc.h"
 #include "tiled_conv/tiled_conv.cpp"
 #include "conv1/tiled_conv.hpp"
+#include "conv_ds/tiled_conv.cpp"
 #include "residual.cpp"
 
 #ifdef CSIM_DEBUG
@@ -178,7 +179,7 @@ void resnet18(
 
     // layer 2
     // downsample
-    tiled_conv
+    conv_ds::tiled_conv
         <L2_DEPTH, L1_DEPTH, 1, 1, 2, 0,
         L1_SIDE, L1_SIDE, 64, 32, 14, 14>
         (l2_out1, maxpool_out, l2_ds_weight, l2_ds_bias, false);
