@@ -29,6 +29,7 @@ void tiled_conv_ds(
     const wt_t layer_bias[]
 )
 {
+    #pragma HLS inline
     const int N_TILE_ROWS = IN_FM_HEIGHT / (2 * BUF_HEIGHT);
     const int N_TILE_COLS = IN_FM_WIDTH / (2 * BUF_WIDTH);
     const int N_TILE_LAYERS = IN_FM_DEPTH / IN_BUF_DEPTH;

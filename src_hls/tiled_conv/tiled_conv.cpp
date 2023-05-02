@@ -139,6 +139,7 @@ inline void tiled_conv (
     const bool inplace_residual = false
 )
 { 
+    #pragma HLS inline
 
     static_assert(IN_FM_DEPTH >= IN_BUF_DEPTH, "IN_FM_WIDTH >= IN_BUF_DEPTH");
 
