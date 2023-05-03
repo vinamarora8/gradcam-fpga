@@ -10,7 +10,7 @@
 #include "residual.cpp"
 
 #ifdef CSIM_DEBUG
-#include "sim_util.h"
+#include "sim_util.hpp"
 std::string root_dir = "out/";
 #define WRITE_TO_FILE(var, dim0, dim1, dim2) \
 { \

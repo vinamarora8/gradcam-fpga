@@ -6,7 +6,7 @@
 
 #include "resnet18.cpp"
 #include "util.h"
-#include "sim_util.h"
+#include "sim_util.hpp"
 #include "conv.h"
 
 // Floating point precision arrays

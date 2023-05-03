@@ -12,6 +12,7 @@ void tiled_conv_core (
     const wt_t layer_weights[],
     const wt_t layer_bias[],
     const int KERNEL_GRPS,
+    const int IN_FM_DEPTH,
     const int N_TILE_LAYERS,
     const int N_TILE_ROWS,
     const int N_TILE_COLS,
@@ -36,7 +37,8 @@ inline void tiled_conv (
     const int KERNEL_GRPS = OUT_FM_DEPTH / OUT_BUF_DEPTH;
     const int N_TILE_ROWS = IN_FM_HEIGHT / TILE_HEIGHT;
     const int N_TILE_COLS = IN_FM_WIDTH  / TILE_WIDTH;
-    const int N_TILE_LAYERS = IN_FM_DEPTH / IN_BUF_DEPTH;
+    int N_TILE_LAYERS = IN_FM_DEPTH / IN_BUF_DEPTH;
+    if (N_TILE_LAYERS == 0) N_TILE_LAYERS = 1;
 
     conv_3x3_s1::tiled_conv_core(
         output_feature_map,
@@ -45,6 +47,7 @@ inline void tiled_conv (
         (fm_t *) layer_bias,
         KERNEL_GRPS,
         IN_FM_DEPTH,
+        N_TILE_LAYERS,
         N_TILE_ROWS,
         N_TILE_COLS,
         stride_2,

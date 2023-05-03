@@ -1,5 +1,11 @@
 #pragma once
 
+#include <string>
+#include <vector>
+#include <fstream>
+#include <iostream>
+#include "util.h"
+
 float *read_bin_file(const std::string filepath, const std::vector<int> dims)
 {
     uint64_t size = 1;

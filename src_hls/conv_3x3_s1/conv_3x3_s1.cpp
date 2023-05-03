@@ -16,6 +16,7 @@ void tiled_conv_core (
     const wt_t layer_bias[],
     const int KERNEL_GRPS,
     const int IN_FM_DEPTH,
+    const int N_TILE_LAYERS,
     const int N_TILE_ROWS,
     const int N_TILE_COLS,
     const bool stride_2,
@@ -70,32 +71,43 @@ void tiled_conv_core (
         for(int tj = 0; tj < (stride_2 ? N_TILE_COLS/2 : N_TILE_COLS); tj++)
         {
 
-            conv_3x3_s1::load_fm_tile_block_from_DRAM
-                <IN_BUF_DEPTH, IN_BUF_HEIGHT, IN_BUF_WIDTH, TILE_HEIGHT, TILE_WIDTH, PADDING>
-                (conv_in_buf, input_feature_map, 
-                 IN_FM_DEPTH, IN_FM_HEIGHT, IN_FM_WIDTH, ti, tj, 0, stride_2);
-
-            KERNEL_GRP:
-            for (int tk = 0; tk < KERNEL_GRPS; tk++)
+            TILE_LYR:
+            for (int tl = 0; tl < N_TILE_LAYERS; tl++)
             {
-                if (inplace_residual)
+                int DEPTH_CHECK = IN_BUF_DEPTH < IN_FM_DEPTH ? IN_BUF_DEPTH : IN_FM_DEPTH;
+                conv_3x3_s1::load_fm_tile_block_from_DRAM
+                    <IN_BUF_DEPTH, IN_BUF_HEIGHT, IN_BUF_WIDTH, TILE_HEIGHT, TILE_WIDTH, PADDING>
+                    (conv_in_buf, input_feature_map, 
+                     DEPTH_CHECK, IN_FM_HEIGHT, IN_FM_WIDTH, ti, tj, tl, stride_2);
+
+
+                KERNEL_GRP:
+                for (int tk = 0; tk < KERNEL_GRPS; tk++)
                 {
-                    conv_3x3_s1::load_fm_tile_block_from_DRAM
-                        <OUT_BUF_DEPTH, OUT_BUF_HEIGHT, OUT_BUF_WIDTH, OUT_BUF_HEIGHT, OUT_BUF_WIDTH, 0>
-                        (conv_out_buf, output_feature_map, 
-                         OUT_BUF_DEPTH, OUT_FM_HEIGHT, OUT_FM_WIDTH, ti, tj, tk, false);
+                    bool res = inplace_residual || (tl != 0);
+                    if (res)
+                    {
+                        conv_3x3_s1::load_fm_tile_block_from_DRAM
+                            <OUT_BUF_DEPTH, OUT_BUF_HEIGHT, OUT_BUF_WIDTH, OUT_BUF_HEIGHT, OUT_BUF_WIDTH, 0>
+                            (conv_out_buf, output_feature_map, 
+                             OUT_BUF_DEPTH, OUT_FM_HEIGHT, OUT_FM_WIDTH, ti, tj, tk, false);
+                    }
+
+                    conv_3x3_s1::load_layer_params_from_DRAM
+                        (conv_wt_buf, conv_bias_buf, (fm_t *) layer_weights, layer_bias, 
+                         OUT_FM_DEPTH, IN_FM_DEPTH, tk, tl);
+
+                    bool add_bias = tl == 0;
+
+                    conv_3x3_s1::conv_small(
+                        conv_out_buf, conv_in_buf, conv_wt_buf, conv_bias_buf, 
+                                            IN_FM_DEPTH, stride_2, res, add_bias);
+
+                    bool relu = tl == N_TILE_LAYERS - 1;
+                    conv_3x3_s1::store_output_tile_to_DRAM
+                        <OUT_BUF_DEPTH, OUT_BUF_HEIGHT, OUT_BUF_WIDTH>
+                        (output_feature_map, conv_out_buf, out_fm_dims, ti, tj, tk, relu);
                 }
-
-                conv_3x3_s1::load_layer_params_from_DRAM
-                    (conv_wt_buf, conv_bias_buf, (fm_t *) layer_weights, layer_bias, 
-                     OUT_FM_DEPTH, IN_FM_DEPTH, tk, 0);
-
-                conv_3x3_s1::conv_small(conv_out_buf, conv_in_buf, conv_wt_buf, conv_bias_buf, 
-                                        IN_FM_DEPTH, (stride_2 ? 2 : 1), inplace_residual);
-
-                conv_3x3_s1::store_output_tile_to_DRAM
-                    <OUT_BUF_DEPTH, OUT_BUF_HEIGHT, OUT_BUF_WIDTH>
-                    (output_feature_map, conv_out_buf, out_fm_dims, ti, tj, tk);
 
             }
         }

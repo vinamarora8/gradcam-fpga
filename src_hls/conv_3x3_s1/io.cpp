@@ -43,7 +43,7 @@ void load_fm_tile_block_from_DRAM (
         {
             for(int j = 0; j < SCAN_WIDTH; j++)
             {
-                #pragma HLS PIPELINE II=1
+                #pragma HLS PIPELINE II=1 
                 int idx_w = width_offset - P + j;
                 int idx_h = height_offset - P + i;
                 int idx_d = depth_offset + c;
@@ -77,14 +77,17 @@ void load_layer_params_from_DRAM (
 )
 {
 
-    assert(IN_FM_DEPTH <= IN_BUF_DEPTH);
+    //assert(IN_FM_DEPTH <= IN_BUF_DEPTH);
     const int kernel_offset  = tk * OUT_BUF_DEPTH;
+    const int tl_offset = tl * IN_BUF_DEPTH;
+
+    int DEPTH_CHECK = IN_BUF_DEPTH < IN_FM_DEPTH ? IN_BUF_DEPTH : IN_FM_DEPTH;
 
     WEIGHT_KERNEL_NUM:
     for(int f = 0; f < OUT_BUF_DEPTH; f++)
     {
         WEIGHT_KERNEL_DEPTH:
-        for(int c = 0; c < IN_FM_DEPTH; c++)
+        for(int c = 0; c < DEPTH_CHECK; c++)
         {
             WEIGHT_KERNEL_HEIGHT:
             for(int kh = 0; kh < KERNEL_HEIGHT; kh++)
@@ -94,7 +97,7 @@ void load_layer_params_from_DRAM (
 	            {
                     #pragma HLS PIPELINE II=1
                     int idx_f = (kernel_offset + f)*IN_FM_DEPTH*KERNEL_HEIGHT*KERNEL_WIDTH;
-                    int idx = idx_f + conv_3x3_s1::index_calc(c, kh, kw, 
+                    int idx = idx_f + conv_3x3_s1::index_calc(c + tl_offset, kh, kw, 
                                                               KERNEL_HEIGHT, 
                                                               KERNEL_WIDTH);
 
@@ -105,14 +108,12 @@ void load_layer_params_from_DRAM (
     }
 
     BIAS:
-    for(int f = 0; f < OUT_BUF_DEPTH; f++)
-    {
-        #pragma HLS PIPELINE II=1
-        if (tl == 0)
+    if (tl == 0)
+        for(int f = 0; f < OUT_BUF_DEPTH; f++)
+        {
+            #pragma HLS PIPELINE II=1
             bias_buf[f] = bias[kernel_offset + f];
-        else
-            bias_buf[f] = 0;
-    }
+        }
 
 }
 
@@ -123,7 +124,8 @@ void store_output_tile_to_DRAM (
     const fm_dims_s out_fm_dims,
     const int  ti,
     const int  tj,
-    const int  tk
+    const int  tk,
+    const int  relu
 )
 {
 
@@ -153,7 +155,7 @@ void store_output_tile_to_DRAM (
 
                 fm_t out;
                 // ReLU in-place
-                if(out_fm_buf[f][i][j] < (fm_t) 0)
+                if(relu & (out_fm_buf[f][i][j] < (fm_t) 0))
                     out = (fm_t) 0;
                 else
                     out = out_fm_buf[f][i][j];
