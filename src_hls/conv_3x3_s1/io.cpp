@@ -1,17 +1,27 @@
 #pragma once
 #include "../util.h"
 #include "params.hpp"
+#include <cassert>
+
+namespace conv_3x3_s1 {
+
+int index_calc(int idx_d, int idx_h, int idx_w, int IN_FM_HEIGHT, int IN_FM_WIDTH)
+{
+    #pragma HLS inline off
+    return idx_d*IN_FM_HEIGHT*IN_FM_WIDTH + idx_h*IN_FM_WIDTH + idx_w;
+}
 
 template<int TILE_DEPTH, int TILE_HEIGHT, int TILE_WIDTH, int PADDING>
 void load_fm_tile_block_from_DRAM (
     fm_t in_fm_buf[TILE_DEPTH][TILE_HEIGHT + 2*PADDING][TILE_WIDTH + 2*PADDING],
     const fm_t in_fm[],
-    const int FM_HEIGHT, const int FM_WIDTH,
+    const int DEPTH_CHECK, const int FM_HEIGHT, const int FM_WIDTH,
     const int ti,
     const int tj,
     const int tk
 )
 {
+
     const int depth_offset = tk * TILE_DEPTH;
     const int height_offset = ti * TILE_HEIGHT;
     const int width_offset  = tj * TILE_WIDTH;
@@ -23,7 +33,7 @@ void load_fm_tile_block_from_DRAM (
     const int P = PADDING;
 
     INPUT_BUFFER_DEPTH:
-    for(int c = 0; c < BUF_DEPTH; c++) // FM and BUF have same depth
+    for(int c = 0; c < DEPTH_CHECK; c++) // FM and BUF have same depth
     {
         INPUT_BUFFER_HEIGHT:
         for(int i = 0; i < BUF_HEIGHT; i++)
@@ -34,7 +44,8 @@ void load_fm_tile_block_from_DRAM (
                 int idx_w = width_offset - P + j;
                 int idx_h = height_offset - P + i;
                 int idx_d = depth_offset + c;
-                int idx = (idx_w) + (idx_h)*FM_WIDTH + (idx_d)*FM_WIDTH*FM_HEIGHT;
+                //int idx = (idx_w) + (idx_h)*FM_WIDTH + (idx_d)*FM_WIDTH*FM_HEIGHT;
+                int idx = conv_3x3_s1::index_calc(idx_d, idx_h, idx_w, FM_HEIGHT, FM_WIDTH);
 
                 if ((idx_h < 0 || idx_h >= FM_HEIGHT) ||
                     (idx_w < 0 || idx_w >= FM_WIDTH))
@@ -62,31 +73,27 @@ void load_layer_params_from_DRAM (
     const int tl
 )
 {
-    const int kernel_offset  = tk * OUT_BUF_DEPTH;
-    const int tile_layer_offset = tl * IN_BUF_DEPTH;
 
-    int idx_f = kernel_offset*IN_FM_DEPTH*KERNEL_HEIGHT*KERNEL_WIDTH;
+    assert(IN_FM_DEPTH <= IN_BUF_DEPTH);
+    const int kernel_offset  = tk * OUT_BUF_DEPTH;
+
     WEIGHT_KERNEL_NUM:
     for(int f = 0; f < OUT_BUF_DEPTH; f++)
     {
-        int idx_c = tile_layer_offset*KERNEL_HEIGHT*KERNEL_WIDTH;
         WEIGHT_KERNEL_DEPTH:
-        for(int c = 0; c < IN_BUF_DEPTH; c++)
+        for(int c = 0; c < IN_FM_DEPTH; c++)
         {
-            int idx_kh = 0;
             WEIGHT_KERNEL_HEIGHT:
             for(int kh = 0; kh < KERNEL_HEIGHT; kh++)
 	        {
-                int idx_kw = 0;
                 WEIGHT_KERNEL_WIDTH:
 	            for(int kw = 0; kw < KERNEL_WIDTH; kw++)
 	            {
                     #pragma HLS PIPELINE II=1
                     int idx_f = (kernel_offset + f)*IN_FM_DEPTH*KERNEL_HEIGHT*KERNEL_WIDTH;
-                    int idx_c = (tile_layer_offset + c)*KERNEL_HEIGHT*KERNEL_WIDTH;
-                    int idx_kh = kh*KERNEL_WIDTH;
-                    int idx_kw = kw;
-                    int idx = idx_f + idx_c + idx_kh + idx_kw;
+                    int idx = idx_f + conv_3x3_s1::index_calc(c, kh, kw, 
+                                                              KERNEL_HEIGHT, 
+                                                              KERNEL_WIDTH);
 
                     weight_buf[f][c][kh][kw] = weights[idx];
                 }
@@ -135,21 +142,23 @@ void store_output_tile_to_DRAM (
             for(int j = 0; j < OUT_BUF_WIDTH; j++)
             {
                 #pragma HLS PIPELINE II=1
-                int idx = (width_offset + j) + (height_offset + i)*OUT_FM_WIDTH + (depth_offset + f)*OUT_FM_WIDTH*OUT_FM_HEIGHT;
+                int idx = conv_3x3_s1::index_calc(depth_offset + f, 
+                                                  height_offset + i, 
+                                                  width_offset + j, 
+                                                  OUT_FM_HEIGHT, 
+                                                  OUT_FM_WIDTH);
 
                 fm_t out;
                 // ReLU in-place
                 if(out_fm_buf[f][i][j] < (fm_t) 0)
-                {
                     out = (fm_t) 0;
-                }
                 else
-                {
                     out = out_fm_buf[f][i][j];
-                }
 
                 out_fm[idx] = out;
             }
         }
     }
+}
+
 }

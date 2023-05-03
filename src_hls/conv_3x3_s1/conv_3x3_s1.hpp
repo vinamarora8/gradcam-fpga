@@ -29,7 +29,7 @@ inline void tiled_conv (
 { 
     #pragma HLS inline
 
-    static_assert(IN_FM_DEPTH >= IN_BUF_DEPTH, "IN_FM_WIDTH >= IN_BUF_DEPTH");
+    //static_assert(IN_FM_DEPTH >= IN_BUF_DEPTH, "IN_FM_WIDTH >= IN_BUF_DEPTH");
 
     const int KERNEL_GRPS = OUT_FM_DEPTH / OUT_BUF_DEPTH;
     const int N_TILE_ROWS = IN_FM_HEIGHT / TILE_HEIGHT;
@@ -42,7 +42,7 @@ inline void tiled_conv (
         (fm_t *) layer_weights,
         (fm_t *) layer_bias,
         KERNEL_GRPS,
-        N_TILE_LAYERS,
+        IN_FM_DEPTH,
         N_TILE_ROWS,
         N_TILE_COLS,
         inplace_residual

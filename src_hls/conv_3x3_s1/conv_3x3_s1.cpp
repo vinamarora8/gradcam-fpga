@@ -2,12 +2,12 @@
 #include <iostream>
 #include <cassert>
 #include "conv_3x3_s1.hpp"
+#include "io.cpp"
 
 namespace conv_3x3_s1 {
 
 #include "params.hpp"
 #include "conv.cpp"
-#include "io.cpp"
 
 void tiled_conv_core (
     fm_t output_feature_map[],
@@ -15,7 +15,7 @@ void tiled_conv_core (
     const wt_t layer_weights[],
     const wt_t layer_bias[],
     const int KERNEL_GRPS,
-    const int N_TILE_LAYERS,
+    const int IN_FM_DEPTH,
     const int N_TILE_ROWS,
     const int N_TILE_COLS,
     const bool inplace_residual
@@ -32,7 +32,7 @@ void tiled_conv_core (
     static_assert(TILE_HEIGHT % STRIDE == 0, "TILE_HEIGHT must be a multiple of STRIDE");
     static_assert(TILE_WIDTH % STRIDE == 0, "TILE_WIDTH must be a multiple of STRIDE");
 
-    const int IN_FM_DEPTH = IN_BUF_DEPTH * N_TILE_LAYERS;
+    //const int IN_FM_DEPTH = IN_BUF_DEPTH * N_TILE_LAYERS;
     const int IN_FM_HEIGHT = TILE_HEIGHT * N_TILE_ROWS;
     const int IN_FM_WIDTH = TILE_WIDTH * N_TILE_COLS;
     const int OUT_FM_DEPTH = OUT_BUF_DEPTH * KERNEL_GRPS;
@@ -74,6 +74,11 @@ void tiled_conv_core (
         TILE_COL:
         for(int tj = 0; tj < N_TILE_COLS; tj++)
         {
+
+            conv_3x3_s1::load_fm_tile_block_from_DRAM
+                <IN_BUF_DEPTH, TILE_HEIGHT, TILE_WIDTH, PADDING>
+                (conv_in_buf, input_feature_map, IN_FM_DEPTH, IN_FM_HEIGHT, IN_FM_WIDTH, ti, tj, 0);
+
             KERNEL_GRP:
             for (int tk = 0; tk < KERNEL_GRPS; tk++)
             {
@@ -81,25 +86,13 @@ void tiled_conv_core (
                 {
                     conv_3x3_s1::load_fm_tile_block_from_DRAM
                         <OUT_BUF_DEPTH, OUT_BUF_HEIGHT, OUT_BUF_WIDTH, 0>
-                        (conv_out_buf, output_feature_map, OUT_FM_HEIGHT, OUT_FM_WIDTH, ti, tj, tk);
+                        (conv_out_buf, output_feature_map, OUT_BUF_DEPTH, OUT_FM_HEIGHT, OUT_FM_WIDTH, ti, tj, tk);
                 }
 
-                TILE_LYR:
-                for (int tl = 0; tl < N_TILE_LAYERS; tl++)
-                {
-                    conv_3x3_s1::load_fm_tile_block_from_DRAM
-                        <IN_BUF_DEPTH, TILE_HEIGHT, TILE_WIDTH, PADDING>
-                        (conv_in_buf, input_feature_map, IN_FM_HEIGHT, IN_FM_WIDTH, ti, tj, tl);
+                conv_3x3_s1::load_layer_params_from_DRAM
+                    (conv_wt_buf, conv_bias_buf, (fm_t *) layer_weights, layer_bias, OUT_FM_DEPTH, IN_FM_DEPTH, tk, 0);
 
-                    conv_3x3_s1::load_layer_params_from_DRAM
-                        (conv_wt_buf, conv_bias_buf, (fm_t *) layer_weights, layer_bias, 
-                         OUT_FM_DEPTH, IN_FM_DEPTH, tk, tl);
-
-                    bool residual = inplace_residual || (tl != 0);
-                    conv_3x3_s1::conv_small
-                        (conv_out_buf, conv_in_buf, conv_wt_buf, conv_bias_buf, residual);
-
-                }
+                conv_3x3_s1::conv_small(conv_out_buf, conv_in_buf, conv_wt_buf, conv_bias_buf, IN_FM_DEPTH, inplace_residual);
 
                 conv_3x3_s1::store_output_tile_to_DRAM
                     <OUT_BUF_DEPTH, OUT_BUF_HEIGHT, OUT_BUF_WIDTH>

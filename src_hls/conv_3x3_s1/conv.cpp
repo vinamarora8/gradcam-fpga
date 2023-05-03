@@ -7,6 +7,7 @@ void conv_small (
     const fm_t X_buf[IN_BUF_DEPTH][IN_BUF_HEIGHT][IN_BUF_WIDTH],
     const wt_t W_buf[OUT_BUF_DEPTH][IN_BUF_DEPTH][KERNEL_HEIGHT][KERNEL_WIDTH],
     const wt_t B_buf[OUT_BUF_DEPTH],
+    const int  IN_FM_DEPTH,
     const bool add_to_output = false
 )
 {
@@ -31,19 +32,18 @@ B_D: for (int ow = 0; ow < OUT_BUF_WIDTH; ow++) {
         }
     }
 
-OUT_COL:  for (int ow = 0; ow < OUT_BUF_WIDTH; ow++)
-    IN_FEAT:  for (int id = 0; id < IN_BUF_DEPTH; id++)
-        IN_ROW:   for (int kh = 0; kh < KERNEL_HEIGHT; kh++)
-            IN_COL:   for (int kw = 0; kw < KERNEL_WIDTH; kw++) 
-                OUT_ROW:  for (int oh = 0; oh < OUT_BUF_HEIGHT; oh++)
-                            #pragma HLS PIPELINE II=1
-                    OUT_FEAT: for (int of = 0; of < OUT_BUF_DEPTH; of++)
-                        {
-                            #pragma HLS UNROLL
-                            fm_t x = Y_buf[of][oh][ow];
-                            int i = S*oh + kh;
-                            int j = S*ow + kw;
-                            x += X_buf[id][i][j] * W_buf[of][id][kh][kw];
-                            Y_buf[of][oh][ow] = x;
-                        }
+IN_FEAT:  for (int id = 0; id < IN_FM_DEPTH; id++) {
+    IN_ROW:   for (int kh = 0; kh < KERNEL_HEIGHT; kh++) {
+        IN_COL:   for (int kw = 0; kw < KERNEL_WIDTH; kw++)  {
+            OUT_COL:  for (int ow = 0; ow < OUT_BUF_WIDTH; ow++) {
+                OUT_ROW:  for (int oh = 0; oh < OUT_BUF_HEIGHT; oh++) {
+                    #pragma HLS PIPELINE II=1
+                    OUT_FEAT: for (int of = 0; of < OUT_BUF_DEPTH; of++) {
+                                #pragma HLS UNROLL
+                                fm_t x = Y_buf[of][oh][ow];
+                                int i = S*oh + kh;
+                                int j = S*ow + kw;
+                                x += X_buf[id][i][j] * W_buf[of][id][kh][kw];
+                                Y_buf[of][oh][ow] = x;
+                        }}}}}}
 }
