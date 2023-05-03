@@ -15,6 +15,7 @@ void tiled_conv_core (
     const int N_TILE_LAYERS,
     const int N_TILE_ROWS,
     const int N_TILE_COLS,
+    const bool stride_2,
     const bool inplace_residual
 );
 
@@ -24,7 +25,8 @@ inline void tiled_conv (
     const fm_t input_feature_map[],
     const wt_t layer_weights[],
     const wt_t layer_bias[],
-    const bool inplace_residual = false
+    const bool inplace_residual = false,
+    const bool stride_2 = false
 )
 { 
     #pragma HLS inline
@@ -45,6 +47,7 @@ inline void tiled_conv (
         IN_FM_DEPTH,
         N_TILE_ROWS,
         N_TILE_COLS,
+        stride_2,
         inplace_residual
         );
 

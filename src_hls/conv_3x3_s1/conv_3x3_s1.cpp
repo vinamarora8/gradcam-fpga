@@ -18,6 +18,7 @@ void tiled_conv_core (
     const int IN_FM_DEPTH,
     const int N_TILE_ROWS,
     const int N_TILE_COLS,
+    const bool stride_2,
     const bool inplace_residual
 )
 {
@@ -36,8 +37,8 @@ void tiled_conv_core (
     const int IN_FM_HEIGHT = TILE_HEIGHT * N_TILE_ROWS;
     const int IN_FM_WIDTH = TILE_WIDTH * N_TILE_COLS;
     const int OUT_FM_DEPTH = OUT_BUF_DEPTH * KERNEL_GRPS;
-    const int OUT_FM_HEIGHT = STRIDE == 1 ? IN_FM_HEIGHT : IN_FM_HEIGHT >> 1;
-    const int OUT_FM_WIDTH = STRIDE == 1 ? IN_FM_WIDTH : IN_FM_WIDTH >> 1;
+    const int OUT_FM_HEIGHT = stride_2 ? IN_FM_HEIGHT/2 : IN_FM_HEIGHT;
+    const int OUT_FM_WIDTH = stride_2 ? IN_FM_WIDTH/2 : IN_FM_WIDTH;
 
 
     assert(IN_FM_HEIGHT % STRIDE == 0);
@@ -46,12 +47,6 @@ void tiled_conv_core (
     assert(IN_FM_HEIGHT % TILE_HEIGHT == 0);
     assert(IN_FM_WIDTH % TILE_WIDTH == 0);
 
-
-    const int MARGIN = 2 * PADDING;
-    const int IN_BUF_HEIGHT = TILE_HEIGHT + MARGIN;
-    const int IN_BUF_WIDTH = TILE_WIDTH + MARGIN;
-    const int OUT_BUF_HEIGHT = STRIDE == 1 ? TILE_HEIGHT : TILE_HEIGHT >> 1;
-    const int OUT_BUF_WIDTH = STRIDE == 1 ? TILE_WIDTH : TILE_WIDTH >> 1;
 
     const fm_dims_s in_fm_dims = {IN_FM_DEPTH, IN_FM_HEIGHT, IN_FM_WIDTH};
     const fm_dims_s out_fm_dims = {OUT_FM_DEPTH, OUT_FM_HEIGHT, OUT_FM_WIDTH};
@@ -69,15 +64,16 @@ void tiled_conv_core (
     //--------------------------------------------------------------------------
     
     TILE_ROW:
-    for(int ti = 0; ti < N_TILE_ROWS; ti++)
+    for(int ti = 0; ti < (stride_2 ? N_TILE_ROWS/2 : N_TILE_ROWS); ti++)
     {
         TILE_COL:
-        for(int tj = 0; tj < N_TILE_COLS; tj++)
+        for(int tj = 0; tj < (stride_2 ? N_TILE_COLS/2 : N_TILE_COLS); tj++)
         {
 
             conv_3x3_s1::load_fm_tile_block_from_DRAM
-                <IN_BUF_DEPTH, TILE_HEIGHT, TILE_WIDTH, PADDING>
-                (conv_in_buf, input_feature_map, IN_FM_DEPTH, IN_FM_HEIGHT, IN_FM_WIDTH, ti, tj, 0);
+                <IN_BUF_DEPTH, IN_BUF_HEIGHT, IN_BUF_WIDTH, TILE_HEIGHT, TILE_WIDTH, PADDING>
+                (conv_in_buf, input_feature_map, 
+                 IN_FM_DEPTH, IN_FM_HEIGHT, IN_FM_WIDTH, ti, tj, 0, stride_2);
 
             KERNEL_GRP:
             for (int tk = 0; tk < KERNEL_GRPS; tk++)
@@ -85,14 +81,17 @@ void tiled_conv_core (
                 if (inplace_residual)
                 {
                     conv_3x3_s1::load_fm_tile_block_from_DRAM
-                        <OUT_BUF_DEPTH, OUT_BUF_HEIGHT, OUT_BUF_WIDTH, 0>
-                        (conv_out_buf, output_feature_map, OUT_BUF_DEPTH, OUT_FM_HEIGHT, OUT_FM_WIDTH, ti, tj, tk);
+                        <OUT_BUF_DEPTH, OUT_BUF_HEIGHT, OUT_BUF_WIDTH, OUT_BUF_HEIGHT, OUT_BUF_WIDTH, 0>
+                        (conv_out_buf, output_feature_map, 
+                         OUT_BUF_DEPTH, OUT_FM_HEIGHT, OUT_FM_WIDTH, ti, tj, tk, false);
                 }
 
                 conv_3x3_s1::load_layer_params_from_DRAM
-                    (conv_wt_buf, conv_bias_buf, (fm_t *) layer_weights, layer_bias, OUT_FM_DEPTH, IN_FM_DEPTH, tk, 0);
+                    (conv_wt_buf, conv_bias_buf, (fm_t *) layer_weights, layer_bias, 
+                     OUT_FM_DEPTH, IN_FM_DEPTH, tk, 0);
 
-                conv_3x3_s1::conv_small(conv_out_buf, conv_in_buf, conv_wt_buf, conv_bias_buf, IN_FM_DEPTH, inplace_residual);
+                conv_3x3_s1::conv_small(conv_out_buf, conv_in_buf, conv_wt_buf, conv_bias_buf, 
+                                        IN_FM_DEPTH, (stride_2 ? 2 : 1), inplace_residual);
 
                 conv_3x3_s1::store_output_tile_to_DRAM
                     <OUT_BUF_DEPTH, OUT_BUF_HEIGHT, OUT_BUF_WIDTH>

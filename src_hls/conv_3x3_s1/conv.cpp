@@ -2,17 +2,17 @@
 #include "../util.h"
 #include "params.hpp"
 
-void conv_small (
+void conv_small(
     fm_t Y_buf[OUT_BUF_DEPTH][OUT_BUF_HEIGHT][OUT_BUF_WIDTH],
     const fm_t X_buf[IN_BUF_DEPTH][IN_BUF_HEIGHT][IN_BUF_WIDTH],
     const wt_t W_buf[OUT_BUF_DEPTH][IN_BUF_DEPTH][KERNEL_HEIGHT][KERNEL_WIDTH],
     const wt_t B_buf[OUT_BUF_DEPTH],
     const int  IN_FM_DEPTH,
-    const bool add_to_output = false
+    const int  S,
+    const bool add_to_output
 )
 {
 #pragma HLS INLINE off
-    const int S = STRIDE;
 
     #pragma HLS ARRAY_PARTITION variable=Y_buf complete dim=1
     #pragma HLS ARRAY_PARTITION variable=W_buf complete dim=1

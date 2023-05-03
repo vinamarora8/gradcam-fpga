@@ -11,34 +11,37 @@ int index_calc(int idx_d, int idx_h, int idx_w, int IN_FM_HEIGHT, int IN_FM_WIDT
     return idx_d*IN_FM_HEIGHT*IN_FM_WIDTH + idx_h*IN_FM_WIDTH + idx_w;
 }
 
-template<int TILE_DEPTH, int TILE_HEIGHT, int TILE_WIDTH, int PADDING>
+template<int BUF_DEPTH, int BUF_HEIGHT, int BUF_WIDTH, 
+int TILE_HEIGHT, int TILE_WIDTH, int PADDING>
 void load_fm_tile_block_from_DRAM (
-    fm_t in_fm_buf[TILE_DEPTH][TILE_HEIGHT + 2*PADDING][TILE_WIDTH + 2*PADDING],
+    fm_t in_fm_buf[BUF_DEPTH][BUF_HEIGHT][BUF_WIDTH],
     const fm_t in_fm[],
     const int DEPTH_CHECK, const int FM_HEIGHT, const int FM_WIDTH,
     const int ti,
     const int tj,
-    const int tk
+    const int tk,
+    const bool stride_2
 )
 {
 
-    const int depth_offset = tk * TILE_DEPTH;
-    const int height_offset = ti * TILE_HEIGHT;
-    const int width_offset  = tj * TILE_WIDTH;
+    const int depth_offset = tk * BUF_DEPTH;
+    const int height_offset = ti * TILE_HEIGHT * (stride_2 ? 2 : 1);
+    const int width_offset  = tj * TILE_WIDTH * (stride_2 ? 2 : 1);
 
-    const int BUF_DEPTH = TILE_DEPTH;
-    const int BUF_HEIGHT = TILE_HEIGHT + 2*PADDING;
-    const int BUF_WIDTH = TILE_WIDTH + 2*PADDING;
+    //static_assert(BUF_HEIGHT == TILE_HEIGHT + 2*PADDING, "BUF_HEIGHT != TILE_HEIGHT + 2*PADDING");
+    //static_assert(BUF_WIDTH == TILE_WIDTH + 2*PADDING, "BUF_WIDTH != TILE_WIDTH + 2*PADDING");
 
     const int P = PADDING;
+    const int SCAN_HEIGHT = 2*P + (stride_2 ? 2*TILE_HEIGHT : TILE_HEIGHT);
+    const int SCAN_WIDTH = 2*P + (stride_2 ? 2*TILE_WIDTH : TILE_WIDTH);
 
     INPUT_BUFFER_DEPTH:
     for(int c = 0; c < DEPTH_CHECK; c++) // FM and BUF have same depth
     {
         INPUT_BUFFER_HEIGHT:
-        for(int i = 0; i < BUF_HEIGHT; i++)
+        for(int i = 0; i < SCAN_HEIGHT; i++)
         {
-            for(int j = 0; j < BUF_WIDTH; j++)
+            for(int j = 0; j < SCAN_WIDTH; j++)
             {
                 #pragma HLS PIPELINE II=1
                 int idx_w = width_offset - P + j;
