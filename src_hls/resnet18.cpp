@@ -127,7 +127,9 @@ void resnet18(
         wt_t l41_c2_bias[512],
         // fc
         wt_t fc_weight[1000][512],
-        wt_t fc_bias[1000]
+        wt_t fc_bias[1000],
+        // cam output
+        fm_t cam_output[7][7]
         )
 {
 
@@ -147,10 +149,10 @@ void resnet18(
     fm_t *l4_out1 = l4_out0 + L4_SIZE;
     fm_t *avgpool_out = fm_dram + AVG_POOL_OFFSET;
     fm_t *resnet_out = fm_dram + OUTPUT_OFFSET;
-    fm_t *cam_output = fm_dram + CAM_OFFSET; 
+    //fm_t *cam_output = fm_dram + CAM_OFFSET; 
     fm_t *resizedHeatmap = fm_dram + RESIZE_OFFSET;
 
-    //#include "bundles.hpp"
+    #include "bundles.hpp"
 
     // conv1
     conv1::tiled_conv((fm_t (*)[112][112]) conv1_out, input, conv1_weight, conv1_bias);

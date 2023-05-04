@@ -165,6 +165,7 @@ int main(int argc, char *argv[])
 
     load_from_files();
     static fm_t fm_dram[FM_DRAM_SIZE];
+    static fm_t cam_output[7][7];
  
     resnet18(
         fixp_input,
@@ -211,7 +212,8 @@ int main(int argc, char *argv[])
         fixp_l41_c2_weight,
         fixp_l41_c2_bias,
         fixp_fc_weight,
-        fixp_fc_bias
+        fixp_fc_bias,
+        cam_output
     );
 
     return 0;
