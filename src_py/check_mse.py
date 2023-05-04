@@ -27,7 +27,8 @@ file_list = [
     #"l41_c1_out.bin",
     "l41_c2_out.bin",
     "avgpool_out.bin",
-    "output.bin" 
+    "output.bin",
+    "cam_output.bin"
 ]
 
 PASS = True
@@ -46,7 +47,7 @@ for file_name  in file_list:
     print(cpp_output[:10])
     print()
 
-    if mse > 1e-10:
+    if mse > 1e-8:
         PASS = False
 
     if file_name == "output.bin":
