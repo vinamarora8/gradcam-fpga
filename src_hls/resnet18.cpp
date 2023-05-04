@@ -1,7 +1,7 @@
 #include "util.h"
 #include "conv.h"
 #include "maxpool/max_pool.cpp"
-#include "avg_pool.h"
+#include "avg_pool/avg_pool.hpp"
 #include "linear_fc.h"
 #include "conv1/conv1.hpp"
 #include "conv_ds/conv_ds.hpp"
@@ -215,7 +215,8 @@ void resnet18(
 
     // avgpool
     #ifdef CSIM_DEBUG
-    avg_pool<L4_DEPTH, 7, 7>((fm_t (*)[7][7])l4_out1, avgpool_out);
+    avg_pool::avg_pool((fm_t (*)[7][7])l4_out1, avgpool_out);
+    //avg_pool<L4_DEPTH, 7, 7>((fm_t (*)[7][7])l4_out1, avgpool_out);
     WRITE_TO_FILE(avgpool_out, AVG_POOL_SIZE, 1, 1);
     
     // fc
