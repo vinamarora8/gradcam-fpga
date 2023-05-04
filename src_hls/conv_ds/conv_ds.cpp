@@ -61,7 +61,7 @@ void tiled_conv_ds_core(
     #pragma HLS INTERFACE m_axi depth=1  port=in_feature_map   bundle=ds
     #pragma HLS INTERFACE m_axi depth=1  port=layer_weights    bundle=ds
     #pragma HLS INTERFACE m_axi depth=1  port=layer_bias       bundle=ds
-    #pragma HLS INTERFACE m_axi depth=1  port=out_feature_map  bundle=d_
+    #pragma HLS INTERFACE m_axi depth=1  port=out_feature_map  bundle=ds
     #pragma HLS INTERFACE s_axilite register	port=return
 
     const int IN_FM_DEPTH = IN_BUF_DEPTH * N_TILE_LAYERS;

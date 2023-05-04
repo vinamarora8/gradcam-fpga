@@ -5,44 +5,39 @@ namespace linear_fc {
 
 template<int NI, int NO>
 void linear_fc_core(
-    fm_t in[NI],
+    const fm_t in[NI],
     fm_t out[NO],
-    wt_t weights[NO][NI]
+    const wt_t weights[NO][NI]
 )
 {
-    #pragma HLS inline off
-
-    #pragma HLS array_partition variable=out complete
-    #pragma HLS array_partition variable=weights complete dim=1
+    //#pragma HLS array_partition variable=out complete
+    //#pragma HLS array_partition variable=weights complete dim=1
 
 
     FC_INPUT:
     for (int i = 0; i < NI; i++){
-        #pragma HLS pipeline II=1
     FC_OUTPUT:
         for (int j = 0; j < NO; j++){
-            #pragma HLS unroll
-            out[j] += weights[j][i] * in[i];
+        #pragma HLS pipeline II=1
+            fm_t x = out[j];
+            x += weights[j][i] * in[i];
+            out[j] = x;
         }
     }
 }
 
-const int IN_FM_DEPTH = 512;
-const int OUT_FM_DEPTH = 1024;
-
 void linear_fc(
-    fm_t in[IN_FM_DEPTH],
-    fm_t out[OUT_FM_DEPTH],
-    wt_t weights[OUT_FM_DEPTH][IN_FM_DEPTH],
-    wt_t biases[OUT_FM_DEPTH]
+    const fm_t in[512],
+    fm_t out[],
+    const wt_t weights[][512],
+    const wt_t biases[]
 )
 {
     #pragma HLS inline off
-    #pragma HLS INTERFACE m_axi depth=1  port=in  bundle=fm_in
-    #pragma HLS INTERFACE m_axi depth=1  port=weights  bundle=wt
-    #pragma HLS INTERFACE m_axi depth=1  port=biases  bundle=wt
-    #pragma HLS INTERFACE m_axi depth=1  port=out bundle=fm_out
-    #pragma HLS INTERFACE s_axilite register	port=return
+
+    const int IN_FM_DEPTH = 512;
+    const int OUT_FM_DEPTH = 1024;
+
 
     const int IN_BUF_DEPTH = 512;
     const int OUT_BUF_DEPTH = 16;
@@ -55,7 +50,6 @@ void linear_fc(
     static fm_t in_buf[IN_BUF_DEPTH];
     static fm_t out_buf[OUT_BUF_DEPTH];
     static fm_t wt_buf[OUT_BUF_DEPTH][IN_BUF_DEPTH];
-    static fm_t bias_buf[OUT_BUF_DEPTH];
 
     // Load input
     for (int i = 0; i < IN_BUF_DEPTH; i++)

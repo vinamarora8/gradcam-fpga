@@ -7,9 +7,9 @@
 #include "conv_ds/conv_ds.hpp"
 #include "conv_3x3_s1/conv_3x3_s1.hpp"
 #include "conv_3x3_s2/conv_3x3_s2.hpp"
-#include "residual.cpp"
 #include "cam.cpp"
-#include "resize.cpp"
+#include "resize.hpp"
+
 #ifdef CSIM_DEBUG
 #include "sim_util.hpp"
 std::string root_dir = "out/";
@@ -144,8 +144,12 @@ void resnet18(
     fm_t *l4_out0 = fm_dram + L4_FM_OFFSET;
     fm_t *l4_out1 = l4_out0 + L4_SIZE;
     fm_t *avgpool_out = fm_dram + AVG_POOL_OFFSET;
+    fm_t *resnet_out = fm_dram + OUTPUT_OFFSET;
     fm_t *cam_output = fm_dram + CAM_OFFSET; 
     fm_t *resizedHeatmap = fm_dram + RESIZE_OFFSET;
+
+    //#include "bundles.hpp"
+
     // conv1
     conv1::tiled_conv((fm_t (*)[112][112]) conv1_out, input, conv1_weight, conv1_bias);
     WRITE_TO_FILE(conv1_out, CONV1_DEPTH, CONV1_SIDE, CONV1_SIDE);
@@ -218,14 +222,15 @@ void resnet18(
     WRITE_TO_FILE(avgpool_out, AVG_POOL_SIZE, 1, 1);
     
     // fc
-    linear_fc::linear_fc(avgpool_out, output, fc_weight, fc_bias);
-    WRITE_TO_FILE(output, 1000, 1, 1);
-    //cam
     #ifdef CSIM_DEBUG
-    cam((fm_t (*)[7])cam_output, (fm_t (*)[512][7][7])l4_out1, fc_weight, output);
+    linear_fc::linear_fc(avgpool_out, resnet_out, fc_weight, fc_bias);
+    WRITE_TO_FILE(resnet_out, 1000, 1, 1);
+    //cam
+    //cam((fm_t (*)[7])cam_output, (fm_t (*)[512][7][7])l4_out1, fc_weight, resnet_out);
     WRITE_TO_FILE(cam_output, 7, 7, 1);
-    //resize heatmap
-    resize((fm_t (*)[224]) resizedHeatmap, (fm_t (*)[7])cam_output);
-    WRITE_TO_FILE(resizedHeatmap, 224, 224, 1);
     #endif
+
+    //resize heatmap
+    resize((fm_t (*)[224]) resizedHeatmap, (fm_t (*)[7])avgpool_out);
+    WRITE_TO_FILE(resizedHeatmap, 224, 224, 1);
 }
