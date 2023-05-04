@@ -52,11 +52,13 @@ void linear_fc(
     static fm_t wt_buf[OUT_BUF_DEPTH][IN_BUF_DEPTH];
 
     // Load input
+    /*
     for (int i = 0; i < IN_BUF_DEPTH; i++)
     {
         #pragma HLS pipeline II=1
         in_buf[i] = in[i];
     }
+    */
 
     for (int t = 0; t < N_OP_TILES; t++)
     {
@@ -77,10 +79,8 @@ void linear_fc(
             out_buf[i] = biases[t*OUT_BUF_DEPTH + i];
         }
 
-
         // Compute
-        linear_fc::linear_fc_core<IN_BUF_DEPTH, OUT_BUF_DEPTH>(in_buf, out_buf, wt_buf);
-
+        linear_fc::linear_fc_core<IN_BUF_DEPTH, OUT_BUF_DEPTH>(in, out_buf, wt_buf);
 
         // Write output
         for (int i = 0; i < OUT_BUF_DEPTH; i++)

@@ -224,13 +224,14 @@ void resnet18(
     avg_pool::avg_pool((fm_t (*)[7][7])l4_out1, avgpool_out_buf);
     WRITE_TO_FILE(avgpool_out_buf, AVG_POOL_SIZE, 1, 1);
     // fc
-    linear_fc::linear_fc(avgpool_out_buf, resnet_out, fc_weight, fc_bias);
-    WRITE_TO_FILE(resnet_out, 1000, 1, 1);
-    #ifdef CSIM_DEBUG
+    static fm_t output_buf[1000];
+    linear_fc::linear_fc(avgpool_out_buf, output_buf, fc_weight, fc_bias);
+    WRITE_TO_FILE(output_buf, 1000, 1, 1);
     //cam
-    cam::cam((fm_t (*)[7])cam_output, (fm_t (*)[512][7][7])l4_out1, fc_weight, resnet_out);
+    cam::cam((fm_t (*)[7])cam_output, l4_out1, fc_weight, output_buf);
     WRITE_TO_FILE(cam_output, 7, 7, 1);
 
+    #ifdef CSIM_DEBUG
     //resize heatmap
     resize((fm_t (*)[224]) resizedHeatmap, (fm_t (*)[7])avgpool_out);
     WRITE_TO_FILE(resizedHeatmap, 224, 224, 1);

@@ -11,7 +11,6 @@ add_files conv_3x3_s1/conv_3x3_s1.cpp
 add_files conv_3x3_s2/conv_3x3_s2.cpp
 add_files avg_pool/avg_pool.cpp
 add_files linear_fc/linear_fc.cpp
-add_files resize.cpp
 
 # this is your testbench (specified by -tb option)
 # add_files -tb sim.cpp
