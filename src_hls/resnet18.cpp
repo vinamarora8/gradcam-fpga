@@ -1,6 +1,6 @@
 #include "util.h"
 #include "conv.h"
-#include "max_pool.h"
+#include "maxpool/max_pool.cpp"
 #include "avg_pool.h"
 #include "linear_fc.h"
 #include "conv1/conv1.hpp"
@@ -151,13 +151,8 @@ void resnet18(
     WRITE_TO_FILE(conv1_out, CONV1_DEPTH, CONV1_SIDE, CONV1_SIDE);
 
     // maxpool
-    #ifdef CSIM_DEBUG
-    maxpool2d<CONV1_DEPTH, CONV1_SIDE, CONV1_SIDE, 
-            MAXPOOL_DEPTH, MAXPOOL_SIDE, MAXPOOL_SIDE, 
-            3, 3, 2, 1>((fm_t (*)[MAXPOOL_SIDE][MAXPOOL_SIDE])maxpool_out, 
-                        (fm_t (*)[CONV1_SIDE][CONV1_SIDE])conv1_out);
+    maxpool::maxpool2d(maxpool_out, conv1_out);
     WRITE_TO_FILE(maxpool_out, MAXPOOL_DEPTH, MAXPOOL_SIDE, MAXPOOL_SIDE);
-    #endif
 
     // layer 1 
     // block 0
@@ -219,7 +214,7 @@ void resnet18(
     WRITE_TO_FILE_NAME(l4_out1, "l41_c2_out", L4_DEPTH, L4_SIDE, L4_SIDE);
 
     // avgpool
-    //#ifdef CSIM_DEBUG
+    #ifdef CSIM_DEBUG
     avg_pool<L4_DEPTH, 7, 7>((fm_t (*)[7][7])l4_out1, avgpool_out);
     WRITE_TO_FILE(avgpool_out, AVG_POOL_SIZE, 1, 1);
     
@@ -232,5 +227,5 @@ void resnet18(
     //resize heatmap
     resize((fm_t (*)[224]) resizedHeatmap, (fm_t (*)[7])cam_output);
     WRITE_TO_FILE(resizedHeatmap, 224, 224, 1);
-    //#endif
+    #endif
 }

@@ -1,7 +1,7 @@
 open_project proj
 
 # this is your top module 
-set_top test_maxpool
+set_top maxpool2d
 
 # this is your file that to be synthesized as FPGA design
 # TODO
