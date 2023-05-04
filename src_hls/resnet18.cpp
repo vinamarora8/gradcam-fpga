@@ -8,7 +8,7 @@
 #include "conv_3x3_s1/conv_3x3_s1.hpp"
 #include "conv_3x3_s2/conv_3x3_s2.hpp"
 #include "residual.cpp"
-#include "cam.cpp"
+#include "cam/cam.cpp"
 #include "resize.cpp"
 #ifdef CSIM_DEBUG
 #include "sim_util.hpp"
@@ -130,7 +130,9 @@ void resnet18(
         wt_t fc_bias[1000]
         )
 {
+
     
+     
     WRITE_TO_FILE(input, INP_DEPTH, INP_SIDE, INP_SIDE);
 
     fm_t *conv1_out = fm_dram;
@@ -216,13 +218,13 @@ void resnet18(
     // avgpool
     avg_pool::avg_pool((fm_t (*)[7][7])l4_out1, avgpool_out);
     WRITE_TO_FILE(avgpool_out, AVG_POOL_SIZE, 1, 1);
-    
+    #ifdef CSIM_DEBUG 
     // fc
     linear_fc::linear_fc(avgpool_out, output, fc_weight, fc_bias);
     WRITE_TO_FILE(output, 1000, 1, 1);
     //cam
-    #ifdef CSIM_DEBUG
-    cam((fm_t (*)[7])cam_output, (fm_t (*)[512][7][7])l4_out1, fc_weight, output);
+    //#ifdef CSIM_DEBUG
+    cam::cam((fm_t (*)[7])cam_output, (fm_t (*)[512][7][7])l4_out1, fc_weight, output);
     WRITE_TO_FILE(cam_output, 7, 7, 1);
     //resize heatmap
     resize((fm_t (*)[224]) resizedHeatmap, (fm_t (*)[7])cam_output);

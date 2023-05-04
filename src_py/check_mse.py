@@ -27,7 +27,8 @@ file_list = [
     #"l41_c1_out.bin",
     "l41_c2_out.bin",
     "avgpool_out.bin",
-    "output.bin" 
+    "output.bin",
+    "cam_output.bin"
 ]
 
 PASS = True
