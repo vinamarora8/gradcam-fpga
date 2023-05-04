@@ -222,15 +222,15 @@ void resnet18(
     WRITE_TO_FILE(avgpool_out, AVG_POOL_SIZE, 1, 1);
     
     // fc
-    #ifdef CSIM_DEBUG
     linear_fc::linear_fc(avgpool_out, resnet_out, fc_weight, fc_bias);
     WRITE_TO_FILE(resnet_out, 1000, 1, 1);
+    #ifdef CSIM_DEBUG
     //cam
-    //cam((fm_t (*)[7])cam_output, (fm_t (*)[512][7][7])l4_out1, fc_weight, resnet_out);
+    cam((fm_t (*)[7])cam_output, (fm_t (*)[512][7][7])l4_out1, fc_weight, resnet_out);
     WRITE_TO_FILE(cam_output, 7, 7, 1);
-    #endif
 
     //resize heatmap
     resize((fm_t (*)[224]) resizedHeatmap, (fm_t (*)[7])avgpool_out);
     WRITE_TO_FILE(resizedHeatmap, 224, 224, 1);
+    #endif
 }

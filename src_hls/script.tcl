@@ -23,6 +23,7 @@ set_part {xc7z020clg400-1}
 
 create_clock -period 10 -name default
 config_interface -m_axi_latency 64
+config_interface -m_axi_max_widen_bitwidth 256
 
 # synthesis
 csynth_design
