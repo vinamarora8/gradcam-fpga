@@ -2,7 +2,7 @@
 #include "conv.h"
 #include "max_pool.h"
 #include "avg_pool.h"
-#include "linear_fc.h"
+#include "linear_fc/linear_fc.cpp"
 #include "conv1/conv1.hpp"
 #include "conv_ds/conv_ds.hpp"
 #include "conv_3x3_s1/conv_3x3_s1.hpp"
