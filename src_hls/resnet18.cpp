@@ -2,7 +2,7 @@
 #include "conv.h"
 #include "maxpool/max_pool.cpp"
 #include "avg_pool/avg_pool.hpp"
-#include "linear_fc.h"
+#include "linear_fc/linear_fc.hpp"
 #include "conv1/conv1.hpp"
 #include "conv_ds/conv_ds.hpp"
 #include "conv_3x3_s1/conv_3x3_s1.hpp"
@@ -218,10 +218,10 @@ void resnet18(
     WRITE_TO_FILE(avgpool_out, AVG_POOL_SIZE, 1, 1);
     
     // fc
-    #ifdef CSIM_DEBUG
-    linear_fc<L4_DEPTH, OUTPUT_SIZE>(avgpool_out, output, fc_weight, fc_bias);
+    linear_fc::linear_fc(avgpool_out, output, fc_weight, fc_bias);
     WRITE_TO_FILE(output, 1000, 1, 1);
     //cam
+    #ifdef CSIM_DEBUG
     cam((fm_t (*)[7])cam_output, (fm_t (*)[512][7][7])l4_out1, fc_weight, output);
     WRITE_TO_FILE(cam_output, 7, 7, 1);
     //resize heatmap

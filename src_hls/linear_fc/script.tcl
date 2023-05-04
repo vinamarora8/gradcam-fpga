@@ -1,16 +1,11 @@
 open_project proj
 
 # this is your top module 
-set_top resnet18
+set_top linear_fc
 
 # this is your file that to be synthesized as FPGA design
-add_files resnet18.cpp
-add_files conv1/conv1.cpp 
-add_files conv_ds/conv_ds.cpp
-add_files conv_3x3_s1/conv_3x3_s1.cpp
-add_files conv_3x3_s2/conv_3x3_s2.cpp
-add_files avg_pool/avg_pool.cpp
-add_files linear_fc/linear_fc.cpp
+# TODO
+add_files linear_fc.cpp
 
 # this is your testbench (specified by -tb option)
 # add_files -tb sim.cpp

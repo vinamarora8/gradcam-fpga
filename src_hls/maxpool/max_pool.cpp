@@ -154,9 +154,10 @@ void maxpool2d(
     const fm_t input[]
 )
 {
+    #pragma HLS inline off
     #pragma HLS INTERFACE m_axi depth=1  port=input   bundle=fm_in
     #pragma HLS INTERFACE m_axi depth=1  port=output bundle=fm_out
-    #pragma HLS inline off
+    #pragma HLS INTERFACE s_axilite register	port=return
 
     const int IN_FM_DEPTH = 64;
     const int IN_FM_HEIGHT = 112;
