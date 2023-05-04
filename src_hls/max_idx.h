@@ -10,11 +10,13 @@
  * @param: out: Index of the maximum value
  * @param: x: Array of values
  */
-template <int D>
-int max_idx(int x[D])
+template <int D, typename fixp_t >
+int max_idx(fixp_t x[D])
 {
     int ans = 0;
     for (int i = 0; i < D; i++)
-        if (x[i] > x[out])
+        if (x[i] > x[ans])
             ans = i;
+
+    return ans;
 }

@@ -24,8 +24,9 @@ void conv_small(
     if (add_bias) {
     B_D: for (int ow = 0; ow < OUT_BUF_WIDTH; ow++) {
         B_H: for (int oh = 0; oh < OUT_BUF_HEIGHT; oh++) {
+                #pragma HLS PIPELINE II=1
             B_W: for (int of = 0; of < OUT_BUF_DEPTH; of++) {
-                    #pragma HLS PIPELINE II=1
+                    #pragma HLS UNROLL
                     fm_t x = Y_buf[of][oh][ow];
                     if (add_to_output)
                         x += B_buf[of];
