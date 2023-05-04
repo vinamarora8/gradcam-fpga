@@ -11,23 +11,27 @@
 */
 template<int ID, int IH, int IW>
 void avg_pool(
-    fm_t in[IH][IH][IW],
-    fm_t out[IH]
+    fm_t in[ID][IH][IW],
+    fm_t out[ID]
 )
 {
     #pragma HLS inline off
-    for (int c = 0; c < ID; c++){
-#pragma HLS pipeline off
-        fm_t sum = 0;
 
+    const fm_t factor = (fm_t) (16.0 / (IH * IW));
+
+    // Zero outputs
+    for (int c = 0; c < ID; c++)
+        out[c] = 0;
+
+    for (int c = 0; c < ID; c++){
         for (int i = 0; i < IH; i++){
-#pragma HLS pipeline off
             for (int j = 0; j < IW; j++){
-#pragma HLS pipeline off
-                sum += in[c][i][j];
+                out[c] += in[c][i][j] / 16;
             }
         }
+    }
 
-        out[c] = sum / (IH * IW);
+    for (int c = 0; c < ID; c++){
+        out[c] = out[c] * factor;
     }
 }
