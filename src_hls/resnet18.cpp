@@ -8,7 +8,8 @@
 #include "conv_3x3_s1/conv_3x3_s1.hpp"
 #include "conv_3x3_s2/conv_3x3_s2.hpp"
 #include "residual.cpp"
-
+#include "cam.cpp"
+#include "resize.cpp"
 #ifdef CSIM_DEBUG
 #include "sim_util.hpp"
 std::string root_dir = "out/";
@@ -61,7 +62,8 @@ std::string root_dir = "out/";
 
 #define AVG_POOL_SIZE L4_DEPTH
 #define OUTPUT_SIZE 1000
-
+#define CAM_SIZE 49
+#define RESIZE_SIZE 224*224
 // FM_DRAM offsets
 #define CONV1_FM_OFFSET 0
 #define MAXPOOL_FM_OFFSET (CONV1_FM_OFFSET + CONV1_SIZE)
@@ -71,9 +73,10 @@ std::string root_dir = "out/";
 #define L4_FM_OFFSET (L3_FM_OFFSET + 2*L3_SIZE)
 #define AVG_POOL_OFFSET (L4_FM_OFFSET + 2*L4_SIZE)
 #define OUTPUT_OFFSET (AVG_POOL_OFFSET + AVG_POOL_SIZE)
+#define CAM_OFFSET (OUTPUT_OFFSET + OUTPUT_SIZE)
+#define RESIZE_OFFSET (CAM_OFFSET + CAM_SIZE)
 
-#define FM_DRAM_SIZE (OUTPUT_OFFSET + OUTPUT_SIZE)
-
+#define FM_DRAM_SIZE (RESIZE_OFFSET + RESIZE_SIZE)
 void resnet18(
         fm_t input[INP_DEPTH][INP_SIDE][INP_SIDE],
         fm_t output[1000],
@@ -141,7 +144,8 @@ void resnet18(
     fm_t *l4_out0 = fm_dram + L4_FM_OFFSET;
     fm_t *l4_out1 = l4_out0 + L4_SIZE;
     fm_t *avgpool_out = fm_dram + AVG_POOL_OFFSET;
-
+    fm_t *cam_output = fm_dram + CAM_OFFSET; 
+    fm_t *resizedHeatmap = fm_dram + RESIZE_OFFSET;
     // conv1
     conv1::tiled_conv((fm_t (*)[112][112]) conv1_out, input, conv1_weight, conv1_bias);
     WRITE_TO_FILE(conv1_out, CONV1_DEPTH, CONV1_SIDE, CONV1_SIDE);
@@ -215,12 +219,18 @@ void resnet18(
     WRITE_TO_FILE_NAME(l4_out1, "l41_c2_out", L4_DEPTH, L4_SIDE, L4_SIDE);
 
     // avgpool
-    #ifdef CSIM_DEBUG
+    //#ifdef CSIM_DEBUG
     avg_pool<L4_DEPTH, 7, 7>((fm_t (*)[7][7])l4_out1, avgpool_out);
     WRITE_TO_FILE(avgpool_out, AVG_POOL_SIZE, 1, 1);
     
     // fc
     linear_fc<L4_DEPTH, OUTPUT_SIZE>(avgpool_out, output, fc_weight, fc_bias);
     WRITE_TO_FILE(output, 1000, 1, 1);
-    #endif
+    //cam
+    cam((fm_t (*)[7])cam_output, (fm_t (*)[512][7][7])l4_out1, fc_weight, output);
+    WRITE_TO_FILE(cam_output, 7, 7, 1);
+    //resize heatmap
+    resize((fm_t (*)[224]) resizedHeatmap, (fm_t (*)[7])cam_output);
+    WRITE_TO_FILE(resizedHeatmap, 224, 224, 1);
+    //#endif
 }
