@@ -214,12 +214,11 @@ void resnet18(
     WRITE_TO_FILE_NAME(l4_out1, "l41_c2_out", L4_DEPTH, L4_SIDE, L4_SIDE);
 
     // avgpool
-    #ifdef CSIM_DEBUG
     avg_pool::avg_pool((fm_t (*)[7][7])l4_out1, avgpool_out);
-    //avg_pool<L4_DEPTH, 7, 7>((fm_t (*)[7][7])l4_out1, avgpool_out);
     WRITE_TO_FILE(avgpool_out, AVG_POOL_SIZE, 1, 1);
     
     // fc
+    #ifdef CSIM_DEBUG
     linear_fc<L4_DEPTH, OUTPUT_SIZE>(avgpool_out, output, fc_weight, fc_bias);
     WRITE_TO_FILE(output, 1000, 1, 1);
     //cam
