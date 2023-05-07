@@ -1,5 +1,5 @@
 #include "../util.h"
-#include "../max_idx.h"
+#include "max_idx.h"
 
 
 namespace cam{

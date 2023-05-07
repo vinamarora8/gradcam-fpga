@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../conv.h"
 #include <cassert>
+#include "../util.h"
 
 namespace maxpool 
 {

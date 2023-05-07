@@ -1,5 +1,4 @@
 #include "util.h"
-#include "conv.h"
 #include "maxpool/max_pool.cpp"
 #include "avg_pool/avg_pool.hpp"
 #include "linear_fc/linear_fc.hpp"
