@@ -9,3 +9,18 @@ The FPGA board under consideration when writing this HLS implementatin was PYNQ-
 - `expected_activations` directory contains binary files an example input and expected intermediate activation values
 - `src_py/check_mse.py` is the python script to call for checking C++ outputs for accuracy
 - `src_py/get_exp_acts.py` generates the expected activation values
+
+---
+
+To run a C++ simulation:
+
+1. Go to `src_hls/` and run
+```
+make sim
+./a.out
+```
+
+2. To check outputs, go back to project root and run 
+```
+python src_py/check_mse.py
+```
