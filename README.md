@@ -9,6 +9,7 @@ Python dependencies (required when checking MSE, and generating expected golden 
 - `torch`
 
 ## Repository structure
+- `bin/`: Contains the weight binaries for ResNet18
 - `src_hls`: Contains the HLS code
     - `src_hls/resnet18.cpp` is the top level module for HLS synthesis
     - `src_hls/*/` contain implementations of different layers, along with vitis synthesis script to check HLS synthesis of individual layers
