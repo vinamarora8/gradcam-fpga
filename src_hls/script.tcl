@@ -8,7 +8,6 @@ add_files resnet18.cpp
 add_files conv1/conv1.cpp 
 add_files conv_ds/conv_ds.cpp
 add_files conv_3x3_s1/conv_3x3_s1.cpp
-add_files conv_3x3_s2/conv_3x3_s2.cpp
 add_files avg_pool/avg_pool.cpp
 add_files linear_fc/linear_fc.cpp
 

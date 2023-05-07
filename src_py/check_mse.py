@@ -42,9 +42,9 @@ for file_name  in file_list:
     print(f"Checking {file_name}")
     print(f"Size: {cpp_output.size} == {py_output.size}")
     print(f"MSE: {mse}")
-    print(f"Max error: {max_err}, @ {cpp_output[max_err_idx]} - {py_output[max_err_idx]}")
-    print(py_output[:10])
-    print(cpp_output[:10])
+    #print(f"Max error: {max_err}, @ {cpp_output[max_err_idx]} - {py_output[max_err_idx]}")
+    #print(py_output[:10])
+    #print(cpp_output[:10])
     print()
 
     if mse > 1e-8:
@@ -53,10 +53,6 @@ for file_name  in file_list:
     if file_name == "output.bin":
         print(f"Expected classificiation: {np.argmax(py_output)}")
         print(f"Actual classificiation: {np.argmax(cpp_output)}")
-
-        '''
-        plt.plot(np.abs((py_output - cpp_output) / (py_output + 1e-30)))
-        plt.show()
-        '''
+        print()
 
 print("PASS" if PASS else "FAIL")

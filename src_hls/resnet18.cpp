@@ -6,7 +6,6 @@
 #include "conv1/conv1.hpp"
 #include "conv_ds/conv_ds.hpp"
 #include "conv_3x3_s1/conv_3x3_s1.hpp"
-#include "conv_3x3_s2/conv_3x3_s2.hpp"
 #include "cam/cam.cpp"
 #include "resize.hpp"
 
